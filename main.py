@@ -1,18 +1,15 @@
 import sys
 from antlr4 import *
+
+from cpexp.compile import Compile
+from cpexp.build import update
 from cpexp.generated.CPExpLexer import CPExpLexer
 from cpexp.generated.CPExpParser import CPExpParser
 
+from antlr4.Token import CommonToken
 
-# if __name__ == '__main__':
-#     input = FileStream('hello.txt')
-#     lexer = CPExpLexer(input)
-#     stream = CommonTokenStream(lexer)
-#     parser = CPExpParser(stream)
-#     tree = parser.r()
-#     print(tree.toStringTree(recog=parser))
-
-from cpexp.build import *
-
-update(verbose=True)
+update()
+c = Compile(FileStream('tests/code-example1.txt'))
+c.compile()
+c.tokens()
 

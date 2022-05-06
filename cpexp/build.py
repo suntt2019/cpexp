@@ -1,9 +1,13 @@
+import importlib
 import os
 import time
 import shutil
 
+from cpexp.base import working_dir
+import cpexp.generated.CPExpParser
+import cpexp.generated.CPExpLexer
+
 antlr_alias = 'java -Xmx500M -cp "/usr/local/lib/antlr-4.9-complete.jar:$CLASSPATH" org.antlr.v4.Tool'
-working_dir = os.path.dirname(__file__)
 
 
 def build(verbose=False):
@@ -13,8 +17,14 @@ def build(verbose=False):
     path = os.path.join(working_dir, 'generated', 'CPExp.g4')
     cmd = f'{antlr_alias} -Dlanguage=Python3 {path}'
     if verbose:
-        print(f'    Run command: {cmd}')
+        print(f'    Run build command: {cmd}')
     os.system(cmd)
+    # with open()
+
+    if verbose:
+        print(f'    Reload packages.')
+    importlib.reload(cpexp.generated.CPExpParser)
+    importlib.reload(cpexp.generated.CPExpLexer)
     if verbose:
         print('Build finished.')
 
