@@ -1,4 +1,4 @@
-# Generated from CPExp.g4 by ANTLR 4.9
+# Generated from /home/sun123t2/code/project/cpexp/cpexp/generated/CPExp.g4 by ANTLR 4.9
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .CPExpParser import CPExpParser

@@ -1,4 +1,4 @@
-# Generated from CPExp.g4 by ANTLR 4.9
+# Generated from /home/sun123t2/code/project/cpexp/cpexp/generated/CPExp.g4 by ANTLR 4.9
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -12,9 +12,9 @@ else:
 def serializedATN():
     with StringIO() as buf:
         buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\32")
-        buf.write("\n\4\2\t\2\3\2\3\2\3\2\5\2\b\n\2\3\2\2\2\3\2\2\2\2\t\2")
-        buf.write("\7\3\2\2\2\4\5\7\3\2\2\5\b\5\2\2\2\6\b\7\3\2\2\7\4\3\2")
-        buf.write("\2\2\7\6\3\2\2\2\b\3\3\2\2\2\3\7")
+        buf.write("\n\4\2\t\2\3\2\6\2\6\n\2\r\2\16\2\7\3\2\2\2\3\2\2\2\2")
+        buf.write("\t\2\5\3\2\2\2\4\6\7\3\2\2\5\4\3\2\2\2\6\7\3\2\2\2\7\5")
+        buf.write("\3\2\2\2\7\b\3\2\2\2\b\3\3\2\2\2\3\7")
         return buf.getvalue()
 
 
@@ -84,12 +84,11 @@ class CPExpParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def TOKEN(self):
-            return self.getToken(CPExpParser.TOKEN, 0)
-
-        def r(self):
-            return self.getTypedRuleContext(CPExpParser.RContext,0)
-
+        def TOKEN(self, i:int=None):
+            if i is None:
+                return self.getTokens(CPExpParser.TOKEN)
+            else:
+                return self.getToken(CPExpParser.TOKEN, i)
 
         def getRuleIndex(self):
             return CPExpParser.RULE_r
@@ -109,24 +108,20 @@ class CPExpParser ( Parser ):
 
         localctx = CPExpParser.RContext(self, self._ctx, self.state)
         self.enterRule(localctx, 0, self.RULE_r)
+        self._la = 0 # Token type
         try:
-            self.state = 5
+            self.enterOuterAlt(localctx, 1)
+            self.state = 3 
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input,0,self._ctx)
-            if la_ == 1:
-                self.enterOuterAlt(localctx, 1)
+            _la = self._input.LA(1)
+            while True:
                 self.state = 2
                 self.match(CPExpParser.TOKEN)
-                self.state = 3
-                self.r()
-                pass
-
-            elif la_ == 2:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 4
-                self.match(CPExpParser.TOKEN)
-                pass
-
+                self.state = 5 
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+                if not (_la==CPExpParser.TOKEN):
+                    break
 
         except RecognitionException as re:
             localctx.exception = re
