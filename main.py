@@ -1,13 +1,13 @@
 import sys
 from antlr4 import *
-from src.frontend.HelloLexer import HelloLexer
-from src.frontend.HelloParser import HelloParser
+from src.frontend.CPExpLexer import CPExpLexer
+from src.frontend.CPExpParser import CPExpParser
 
 
 if __name__ == '__main__':
     input = FileStream('hello.txt')
-    lexer = HelloLexer(input)
+    lexer = CPExpLexer(input)
     stream = CommonTokenStream(lexer)
-    parser = HelloParser(stream)
+    parser = CPExpParser(stream)
     tree = parser.r()
     print(tree.toStringTree(recog=parser))

@@ -1,4 +1,9 @@
-lexer grammar Testlex;
+grammar CPExp;
+
+// Simple grammar, just for smoke test
+r: TOKEN+;
+TOKEN: IDN | INT16 | REAL16 | INT8 | REAL8 | INT10 | REAL10 | ADD | SUB | MUL | DIV | LT | GT | EQ | LB | RB | SEM | IF | THEN | ELSE | WHILE | DO;
+
 
 IDN: [a-zA-Z]([a-zA-Z]|[0-9])*(('_'|'.')([a-zA-Z]|[0-9])+)?;
 INT16: ('0x'|'0X')[0-9a-f]+;

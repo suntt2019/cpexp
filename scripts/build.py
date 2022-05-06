@@ -16,7 +16,7 @@ for f in os.listdir('.'):
 
 print('Run ANTLR:')
 print(f'    ANTLR alias is: {antlr}')
-cmd = f'{antlr} -Dlanguage=Python3 Hello.g4'
+cmd = f'{antlr} -Dlanguage=Python3 CPExp.g4'
 print(f'    Run command: {cmd}')
 os.system(cmd)
 
