@@ -6,7 +6,7 @@ from antlr4 import *
 import cpexp.generated.CPExpParser
 import cpexp.generated.CPExpLexer
 from cpexp.lexer import *
-from cpexp.parser import *
+from cpexp.semantic.semantic import *
 
 
 class Compile:
@@ -15,12 +15,18 @@ class Compile:
         self.lexer = CPELexer(self.input_s)
         self.token_s = CommonTokenStream(self.lexer)
         self.parser = cpexp.generated.CPExpParser.CPExpParser(self.token_s)
+        self.ast = None
+        self.semantic_analyzer = CPESemantic(self.lexer.token_values)
 
-    def compile(self):
-        tree = self.parser.p()
-        listener = PrintListener()
+    def parse(self):
+        self.ast = self.parser.p()
+
+    def semantic(self):
         walker = ParseTreeWalker()
-        walker.walk(listener, tree)
+        walker.walk(self.semantic_analyzer, self.ast)
+
+    def get_3ac(self):  # 3ac: three address code
+        return self.semantic_analyzer.variable_attributes[self.ast].code
 
     def lex_only(self):
         self.token_s.fetch(sys.maxsize)

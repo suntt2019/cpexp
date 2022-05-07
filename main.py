@@ -7,8 +7,9 @@ from cpexp.build import update
 from antlr4.Token import CommonToken
 
 update()
-c = Compile(FileStream('tests/lexer/input/prime.in'))
-c.lex_only()
-c.compile()
-print(*c.get_tokens(), sep='\n')
-
+c = Compile(FileStream('tests/parser/input/example1.in'))
+# c.lex_only()
+c.parse()
+c.semantic()
+print(*c.get_3ac(), sep='\n')
+# print(*c.get_tokens(), sep='\n')

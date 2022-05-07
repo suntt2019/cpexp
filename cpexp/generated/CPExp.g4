@@ -8,47 +8,51 @@ options {
     language  = Python3;
 }
 
-p
-  : l
-  | l p
+//top         // Top level entity
+//  : p
+//  ;
+
+p           // Program
+  : l       # SingleProgram
+  | l p     # AppendedProgram
   ;
 
-l
-  : s
+l           // L
+  : s SEM   # SingleLine
   ;
 
-s
-  : IDN EQ e SEM
-  | IF c THEN s
-  | IF c THEN s ELSE s
-  | WHILE c DO s
-  | LB p RB
+s                           // Statement
+  : IDN EQ e                # AssignStatement
+  | IF c THEN s             # IfStatement
+  | IF c THEN s ELSE s      # IfElseStatement
+  | WHILE c DO s            # WhileStatement
+  | LB p RB                 # BracketedStatement
   ;
 
-c
-  : e GT e
-  | e LT e
-  | e EQ e
+c               // Condition
+  : e GT e      # GreaterCondition
+  | e LT e      # LessCondition
+  | e EQ e      # EqualCondition
   ;
 
-e
-  : e ADD e
-  | e SUB e
-  | t
+e               // Expression
+  : e ADD t     # AddExpression
+  | e SUB t     # SubExpression
+  | t           # TermExpression
   ;
 
-t
-  : f
-  | t MUL f
-  | t DIV f
+t               // Term
+  : f           # FactorTerm
+  | t MUL f     # MultipleTerm
+  | t DIV f     # DivitionTerm
   ;
 
-f
-  : LP e RP
-  | IDN
-  | INT8
-  | INT10
-  | INT16
+f               // Factor
+  : LP e RP     # BracketedFactor
+  | IDN         # IdentifierFactor
+  | INT8        # Int8Factor
+  | INT10       # Int10Factor
+  | INT16       # Int16Factor
   ;
 
 IF: 'if';
