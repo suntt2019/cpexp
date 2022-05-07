@@ -3,7 +3,7 @@ import os
 import time
 import shutil
 
-from cpexp.base import working_dir
+from cpexp.base import *
 import cpexp.generated.CPExpParser
 import cpexp.generated.CPExpLexer
 
@@ -19,8 +19,6 @@ def build(verbose=False):
     if verbose:
         print(f'    Run build command: {cmd}')
     os.system(cmd)
-    # with open()
-
     if verbose:
         print(f'    Reload packages.')
     importlib.reload(cpexp.generated.CPExpParser)
@@ -50,10 +48,6 @@ def clean(verbose=False):
 
 
 def up_to_date(verbose=False):
-    grammar_file = os.path.join(working_dir, 'generated', 'CPExp.g4')
-    generated_files = [os.path.join(working_dir, 'generated', filename) for filename in [
-        'CPExpLexer.py', 'CPExpParser.py', 'CPExpListener.py'
-    ]]
     if not all(map(lambda x: os.path.exists(x), generated_files)):
         if verbose:
             print("Some generated file doesn't exist, build isn't up to date.")

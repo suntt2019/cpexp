@@ -9,7 +9,7 @@ options {
 }
 
 p
-  : {print('pstart'); print('yo')} l {print('pend')}
+  : l
   | l p
   ;
 
@@ -54,7 +54,7 @@ f
 IF: 'if';
 THEN: 'then';
 ELSE: 'else';
-WHILE:{print('while')} 'while';
+WHILE: 'while';
 DO: 'do';
 
 ADD: '+';
