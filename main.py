@@ -7,8 +7,8 @@ from cpexp.build import update
 from antlr4.Token import CommonToken
 
 update()
-c = Compile(FileStream('tests/tokens-example.txt'))
+c = Compile(FileStream('tests/lexer/input/prime.in'))
 c.lex_only()
-# c.compile()
+c.compile()
 print(*c.get_tokens(), sep='\n')
 
