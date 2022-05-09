@@ -1,30 +1,14 @@
-from antlr4.tree.Tree import TerminalNodeImpl
+from antlr4.tree.Tree import TerminalNodeImpl, ParseTreeWalker
 
 import cpexp.generated.CPExpListener
-from cpexp.semantic.helpers import *
+from cpexp.semantic.memory import *
 from cpexp.semantic.instructions import *
-
-
-class VA:
-    """VA: Variable Attributes"""
-
-    def __init__(self):
-        self.code = None
-        self.place = None
-        self.true = None
-        self.false = None
-        self.begin = None
-        self.next = None
-        self.gen_s_next = False
-
-    def __str__(self):
-        return f'(code={self.code}, place={self.place})'
+from cpexp.semantic.label import *
+from cpexp.semantic.variable import *
 
 
 def parameterize_children(func):
     def wrapper(self, ctx):
-        print(ctx.__class__.__name__[:-7], func.__name__[:3])
-        print('before', self.variable_attributes.get(ctx))
         func(
             self,
             *filter(
@@ -35,16 +19,16 @@ def parameterize_children(func):
                 )
             )
         )
-        print('after', self.variable_attributes[ctx])
 
     return wrapper
 
 
-class CPESemantic(cpexp.generated.CPExpListener.CPExpListener):
+class Semantic(cpexp.generated.CPExpListener.CPExpListener):
 
     def __init__(self, token_value: list):
         self.token_value = token_value
         self.variable_attributes = {}
+        self.labels = []
 
     def get_data(self, x):
         if type(x) == TerminalNodeImpl:
@@ -53,14 +37,16 @@ class CPESemantic(cpexp.generated.CPExpListener.CPExpListener):
             self.variable_attributes.setdefault(x, VA())
             return self.variable_attributes.get(x)
 
-    # @parameterize_children
-    # def enterTop(self, top: VA, p: VA):
-    #     top.next = new_label()
-    #     p.next = top.next
-    #
-    # @parameterize_children
-    # def exitTop(self, top: VA, p: VA):
-    #     top.code = p.code + [LabelInst(top.next)]
+    def new_label(self):
+        return Label(len(self.labels), lambda x: self.labels.append(x))
+
+    def analyze(self, ast):
+        walker = ParseTreeWalker()
+        walker.walk(self, ast)
+        return self.variable_attributes[ast].code
+
+
+class CPESemantic(Semantic):
 
     @parameterize_children
     def exitSingleProgram(self, p: VA, l: VA):
@@ -81,9 +67,9 @@ class CPESemantic(cpexp.generated.CPExpListener.CPExpListener):
     @parameterize_children
     def enterIfStatement(self, s: VA, c: VA, s1: VA):
         if s.next is None:
-            s.next = new_label()
+            s.next = self.new_label()
             s.gen_s_next = True
-        c.true = new_label()
+        c.true = self.new_label()
         c.false = s.next
         s1.next = s.next
 
@@ -97,10 +83,10 @@ class CPESemantic(cpexp.generated.CPExpListener.CPExpListener):
     @parameterize_children
     def enterIfElseStatement(self, s: VA, c: VA, s1: VA, s2: VA):
         if s.next is None:
-            s.next = new_label()
+            s.next = self.new_label()
             s.gen_s_next = True
-        c.true = new_label()
-        c.false = new_label()
+        c.true = self.new_label()
+        c.false = self.new_label()
         s1.next = s.next
         s2.next = s.next
 
@@ -114,10 +100,10 @@ class CPESemantic(cpexp.generated.CPExpListener.CPExpListener):
     @parameterize_children
     def enterWhileStatement(self, s: VA, c: VA, s1: VA):
         if s.next is None:
-            s.next = new_label()
+            s.next = self.new_label()
             s.gen_s_next = True
-        s.begin = new_label()
-        c.true = new_label()
+        s.begin = self.new_label()
+        c.true = self.new_label()
         c.false = s.next
         s1.next = s.begin
 
@@ -141,7 +127,7 @@ class CPESemantic(cpexp.generated.CPExpListener.CPExpListener):
     @parameterize_children
     def exitEqualCondition(self, c: VA, e1: VA, e2: VA):
         c.code = e1.code + e2.code \
-                 + [IfGotoInst(e1.place, '==', e2.place, c.true), GotoInst(c.false)]
+                 + [IfGotoInst(e1.place, '=', e2.place, c.true), GotoInst(c.false)]
 
     @parameterize_children
     def exitAddExpression(self, e: VA, e1: VA, t: VA):

@@ -41,6 +41,7 @@ class GotoInst(Instruction):
 
 class LabelInst(Instruction):
     def __init__(self, label):
+        self.label = label
         super().__init__(f'{label}:')
 
 

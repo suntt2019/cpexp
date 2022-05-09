@@ -17,16 +17,17 @@ class Compile:
         self.parser = cpexp.generated.CPExpParser.CPExpParser(self.token_s)
         self.ast = None
         self.semantic_analyzer = CPESemantic(self.lexer.token_values)
+        self.tac = None
 
     def parse(self):
         self.ast = self.parser.p()
 
     def semantic(self):
-        walker = ParseTreeWalker()
-        walker.walk(self.semantic_analyzer, self.ast)
+        self.semantic_analyzer.analyze(self.ast)
+        self.tac = self.semantic_analyzer.variable_attributes[self.ast].code
 
-    def get_3ac(self):  # 3ac: three address code
-        return self.semantic_analyzer.variable_attributes[self.ast].code
+    def get_tac(self):  # tac(3ac): three address code
+        return self.tac
 
     def lex_only(self):
         self.token_s.fetch(sys.maxsize)
