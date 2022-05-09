@@ -1,0 +1,5 @@
+grammar empty; // exp
+
+s
+  : ' '
+  ;

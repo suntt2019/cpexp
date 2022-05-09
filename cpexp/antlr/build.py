@@ -4,25 +4,41 @@ import time
 import shutil
 
 from cpexp.base import *
-import cpexp.antlr.CPExpParser
-import cpexp.antlr.CPExpLexer
 
 antlr_alias = 'java -Xmx500M -cp "/usr/local/lib/antlr-4.9-complete.jar:$CLASSPATH" org.antlr.v4.Tool'
 
 
-def build(verbose=False):
+def build(language: str, verbose=False):
+    src_path = os.path.join(working_dir, 'source_related', language, f'{language}.g4')
+    dst_path = grammar_file
     if verbose:
+        print(f'Copy and change grammar file:')
+        print(f'    Path: {src_path} -> {dst_path}')
+    with open(src_path, 'r') as f:
+        lines = f.readlines()
+    first_line = f'grammar CPExp; // {language}'
+    if verbose:
+        print(f'    Finished reading')
+        print(f'    Change first line: "{first_line}"')
+    lines[0] = first_line
+    with open(dst_path, 'w') as f:
+        f.writelines(lines)
+    if verbose:
+        print(f'    Finished writing')
         print('Run ANTLR:')
         print(f'    ANTLR alias is: {antlr_alias}')
-    path = os.path.join(working_dir, 'antlr', 'CPExp.g4')
-    cmd = f'{antlr_alias} -Dlanguage=Python3 {path}'
+    cmd = f'{antlr_alias} -Dlanguage=Python3 {dst_path}'
     if verbose:
         print(f'    Run build command: {cmd}')
     os.system(cmd)
     if verbose:
         print(f'    Reload packages.')
-    importlib.reload(cpexp.generated.CPExpParser)
-    importlib.reload(cpexp.generated.CPExpLexer)
+    import cpexp.antlr.CPExpParser
+    import cpexp.antlr.CPExpLexer
+    import cpexp.antlr.CPExpListener
+    importlib.reload(cpexp.antlr.CPExpParser)
+    importlib.reload(cpexp.antlr.CPExpLexer)
+    importlib.reload(cpexp.antlr.CPExpListener)
     if verbose:
         print('Build finished.')
 
@@ -47,13 +63,18 @@ def clean(verbose=False):
         print('Clean finished.')
 
 
-def up_to_date(verbose=False):
+def up_to_date(language, verbose=False):
     if not all(map(lambda x: os.path.exists(x), generated_files)):
         if verbose:
             print("Some generated file doesn't exist, build isn't up to date.")
         return False
+    with open(grammar_file, 'r') as f:
+        original_language = f.readline().rpartition('// ')[2][:-1]
+    if original_language != language:
+        return False
     gen_time = min(map(lambda x: os.stat(x).st_mtime, generated_files))
-    grammar_time = os.stat(grammar_file).st_mtime
+    source_grammar_file = os.path.join(working_dir, 'source_related', language, f'{language}.g4')
+    grammar_time = os.stat(source_grammar_file).st_mtime
     if verbose:
         print(f'Generated files earliest updated time: {time.strftime("%Y%m%d-%H:%M:%S", time.localtime(gen_time))}')
         print(f'Grammar file updated time: {time.strftime("%Y%m%d-%H:%M:%S", time.localtime(grammar_time))}')
@@ -66,12 +87,12 @@ def up_to_date(verbose=False):
     return True
 
 
-def update(verbose=False, force_update=False):
-    if not force_update and up_to_date(verbose=verbose):
+def update(language, verbose=False, force_update=False):
+    if not force_update and up_to_date(language, verbose=verbose):
         if verbose:
             print('Build already up to date.')
         return
     print('Rebuilding...')
     clean(verbose=verbose)
-    build(verbose=verbose)
+    build(language, verbose=verbose)
     print('Rebuild finished.')
