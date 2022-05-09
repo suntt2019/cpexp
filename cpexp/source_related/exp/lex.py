@@ -4,12 +4,12 @@ from typing.io import TextIO
 
 from antlr4 import CommonTokenStream
 from antlr4.Token import CommonToken, Token
-import cpexp.generated.CPExpLexer
+import cpexp.antlr.CPExpLexer
 
 from cpexp.base import *
 
 
-class CPELexer(cpexp.generated.CPExpLexer.CPExpLexer):
+class CPELexer(cpexp.antlr.CPExpLexer.CPExpLexer):
     def __init__(self, input=None, output: TextIO = sys.stdout):
         super().__init__(input, output)
         self.token_values = []

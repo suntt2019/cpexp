@@ -4,8 +4,8 @@ import time
 import shutil
 
 from cpexp.base import *
-import cpexp.generated.CPExpParser
-import cpexp.generated.CPExpLexer
+import cpexp.antlr.CPExpParser
+import cpexp.antlr.CPExpLexer
 
 antlr_alias = 'java -Xmx500M -cp "/usr/local/lib/antlr-4.9-complete.jar:$CLASSPATH" org.antlr.v4.Tool'
 
@@ -14,7 +14,7 @@ def build(verbose=False):
     if verbose:
         print('Run ANTLR:')
         print(f'    ANTLR alias is: {antlr_alias}')
-    path = os.path.join(working_dir, 'generated', 'CPExp.g4')
+    path = os.path.join(working_dir, 'antlr', 'CPExp.g4')
     cmd = f'{antlr_alias} -Dlanguage=Python3 {path}'
     if verbose:
         print(f'    Run build command: {cmd}')
@@ -30,15 +30,15 @@ def build(verbose=False):
 def clean(verbose=False):
     if verbose:
         print('Clean existing files:')
-    directory = os.path.join(working_dir, 'generated')
+    directory = os.path.join(working_dir, 'antlr')
     for filename in os.listdir(directory):
         if filename.split('.')[-1] == 'g4':
             continue
-        if filename == '__init__.py':
+        if filename in ['__init__.py', 'build.py']:
             continue
         if verbose:
             print(f'    Remove file {filename}')
-        path = os.path.join(working_dir, 'generated', filename)
+        path = os.path.join(working_dir, 'antlr', filename)
         if os.path.isfile(path):
             os.remove(path)
         else:

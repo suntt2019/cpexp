@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from cpexp.semantic.instructions import *
+from cpexp.ir.instructions import *
 
 
 class Label:

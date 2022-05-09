@@ -1,4 +1,4 @@
-from cpexp.semantic.instructions import *
+from cpexp.ir.instructions import *
 
 
 def merge_labels(tac: list[Instruction]):

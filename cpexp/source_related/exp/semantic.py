@@ -1,54 +1,10 @@
-from antlr4.tree.Tree import TerminalNodeImpl, ParseTreeWalker
-
-import cpexp.generated.CPExpListener
-from cpexp.semantic.memory import *
-from cpexp.semantic.instructions import *
-from cpexp.semantic.label import *
-from cpexp.semantic.variable import *
+from cpexp.ir.instructions import AssignInst, LabelInst, GotoInst, IfGotoInst, AddInst, SubInst, MultipleInst, \
+    DivisionInst
+from cpexp.generic.memory import new_temp
+from cpexp.generic.semantic import Semantic, parameterize_children, VA
 
 
-def parameterize_children(func):
-    def wrapper(self, ctx):
-        func(
-            self,
-            *filter(
-                lambda x: x != '_',
-                map(
-                    lambda x: self.get_data(x),
-                    [ctx] + list(ctx.getChildren())
-                )
-            )
-        )
-
-    return wrapper
-
-
-class Semantic(cpexp.generated.CPExpListener.CPExpListener):
-
-    def __init__(self, token_value: list):
-        self.token_value = token_value
-        self.variable_attributes = {}
-        self.labels = []
-
-    def get_data(self, x):
-        if type(x) == TerminalNodeImpl:
-            return self.token_value[x.symbol.tokenIndex]
-        else:
-            self.variable_attributes.setdefault(x, VA())
-            return self.variable_attributes.get(x)
-
-    def new_label(self):
-        ret = Label(len(self.labels))
-        self.labels.append(ret)
-        return ret
-
-    def analyze(self, ast):
-        walker = ParseTreeWalker()
-        walker.walk(self, ast)
-        return self.variable_attributes[ast].code
-
-
-class CPESemantic(Semantic):
+class ExpSemantic(Semantic):
 
     @parameterize_children
     def exitSingleProgram(self, p: VA, l: VA):

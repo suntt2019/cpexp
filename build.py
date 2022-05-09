@@ -1,5 +1,5 @@
 import argparse
-from cpexp.build import update
+from cpexp.antlr.build import update
 
 parser = argparse.ArgumentParser()
 

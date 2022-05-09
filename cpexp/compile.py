@@ -1,12 +1,11 @@
-import os
-
 from antlr4 import *
 
 # Use "import X.Y" instead of "from X import Y" to make reloading available
-import cpexp.generated.CPExpParser
-import cpexp.generated.CPExpLexer
-from cpexp.lexer import *
-from cpexp.semantic.semantic import *
+import cpexp.antlr.CPExpParser
+import cpexp.antlr.CPExpLexer
+from cpexp.source_related.exp.lex import *
+from cpexp.generic.semantic import *
+from cpexp.source_related.exp.semantic import ExpSemantic
 
 
 class Compile:
@@ -14,9 +13,9 @@ class Compile:
         self.input_s = input_stream
         self.lexer = CPELexer(self.input_s)
         self.token_s = CommonTokenStream(self.lexer)
-        self.parser = cpexp.generated.CPExpParser.CPExpParser(self.token_s)
+        self.parser = cpexp.antlr.CPExpParser.CPExpParser(self.token_s)
         self.ast = None
-        self.semantic_analyzer = CPESemantic(self.lexer.token_values)
+        self.semantic_analyzer = ExpSemantic(self.lexer.token_values)
         self.tac = None
 
     def lex_only(self):

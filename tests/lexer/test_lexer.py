@@ -1,6 +1,6 @@
 import os.path
 
-from cpexp.build import update
+from cpexp.antlr.build import update
 from cpexp.compile import *
 from tests.base import *
 

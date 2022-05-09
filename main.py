@@ -1,11 +1,8 @@
-import sys
 from antlr4 import *
 
 from cpexp.compile import Compile
-from cpexp.build import update
-from cpexp.optimizer import merge_labels
-
-from antlr4.Token import CommonToken
+from cpexp.antlr.build import update
+from cpexp.generic.optimizer import merge_labels
 
 update()
 c = Compile(FileStream('tests/parser/input/example1.in'))

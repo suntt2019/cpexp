@@ -1,4 +1,4 @@
-# Generated from /home/sun123t2/code/project/cpexp/cpexp/generated/CPExp.g4 by ANTLR 4.9
+# Generated from /home/sun123t2/code/project/cpexp/cpexp/antlr/CPExp.g4 by ANTLR 4.9
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
