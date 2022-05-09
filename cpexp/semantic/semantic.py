@@ -38,7 +38,9 @@ class Semantic(cpexp.generated.CPExpListener.CPExpListener):
             return self.variable_attributes.get(x)
 
     def new_label(self):
-        return Label(len(self.labels), lambda x: self.labels.append(x))
+        ret = Label(len(self.labels))
+        self.labels.append(ret)
+        return ret
 
     def analyze(self, ast):
         walker = ParseTreeWalker()

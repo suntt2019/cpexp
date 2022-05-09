@@ -19,6 +19,9 @@ class Compile:
         self.semantic_analyzer = CPESemantic(self.lexer.token_values)
         self.tac = None
 
+    def lex_only(self):
+        self.token_s.fetch(sys.maxsize)
+
     def parse(self):
         self.ast = self.parser.p()
 
@@ -26,12 +29,12 @@ class Compile:
         self.semantic_analyzer.analyze(self.ast)
         self.tac = self.semantic_analyzer.variable_attributes[self.ast].code
 
-    def get_tac(self):  # tac(3ac): three address code
-        return self.tac
-
-    def lex_only(self):
-        self.token_s.fetch(sys.maxsize)
+    def optimize(self, optimizer):
+        self.tac = optimizer(self.tac)
 
     def get_tokens(self):
-        tokens = get_tokens(self.token_s)
-        return list(map(self.lexer.format_token, tokens))
+        return list(map(self.lexer.format_token, get_tokens(self.token_s)))
+
+    # tac(3ac): three address code
+    def get_tac(self):
+        return self.tac

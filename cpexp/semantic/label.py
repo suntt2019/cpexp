@@ -1,22 +1,21 @@
 from __future__ import annotations
 
-from cpexp.semantic.variable import VA
+from cpexp.semantic.instructions import *
 
 
 class Label:
-    def __init__(self, _id: int, append):
+    def __init__(self, _id: int):
         self.id = _id
-        self.append = append
         self.usage = []
-        append(self)
 
-    def use(self, va: VA, field: str):
-        self.usage.append((va, field))
+    def use(self, inst: WithLabelInst):
+        self.usage.append(inst)
 
     def merge(self, other: Label):
-        ret = Label(self.id, self.append)
-        ret.usage = self.usage + other.usage
-        return ret
+        self.usage += other.usage
+        for inst in other.usage:
+            inst.set_label(self)
+        del other
 
     def set_id(self, _id):
         self.id = _id
