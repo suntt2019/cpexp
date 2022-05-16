@@ -2,6 +2,22 @@ class Instruction:
     pass
 
 
+class DataInst(Instruction):
+    def __init__(self, name: str, bits: int, initial: any):
+        self.name = name
+        self.bit = bits
+        self.initial = initial
+
+
+class ConvertInst(Instruction):
+    # May refactor to subclasses for different types, eg: between integers, itr, rti...
+    def __init__(self, src_type, dst_type, src, dst):
+        self.src_type = src_type
+        self.dst_type = dst_type
+        self.src = src
+        self.dst = dst
+
+
 class AssignInst(Instruction):
     def __init__(self, left, right):
         self.left = left

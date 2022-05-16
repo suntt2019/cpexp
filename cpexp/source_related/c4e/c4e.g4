@@ -7,6 +7,7 @@ b           // Block
 
 s                           // Statement
   : IDN ASSIGN e SEM        # AssignStatement
+  | TYPE_ IDN SEM           # DeclareStatement
   | IF LP c RP s            # IfStatement
   | IF LP c RP s ELSE s     # IfElseStatement
   | WHILE LP c RP s         # WhileStatement
@@ -46,6 +47,7 @@ ELSE: 'else';
 WHILE: 'while';
 DO: 'do';
 
+
 ADD: '+';
 SUB: '-';
 MUL: '*';
@@ -60,6 +62,7 @@ SEM: ';';
 LB: '{';  // Braces
 RB: '}';
 
+TYPE_: 'int' | 'float';
 IDN: [a-zA-Z]([a-zA-Z]|[0-9])*(('_'|'.')([a-zA-Z]|[0-9])+)?;
 INT16: ('0x'|'0X')[0-9a-f]+;
 REAL16: INT16'.'[0-9a-f]+;

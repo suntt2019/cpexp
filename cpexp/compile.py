@@ -61,8 +61,7 @@ class Compile:
         self.ast = self.parser.b()
 
     def semantic(self):
-        self.semantic_analyzer.analyze(self.ast)
-        self.tac = self.semantic_analyzer.variable_attributes[self.ast].code
+        self.tac = self.semantic_analyzer.analyze(self.ast)
 
     def optimize(self, *optimizers):
         for func in optimizers:

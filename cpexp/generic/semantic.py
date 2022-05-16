@@ -2,6 +2,7 @@ from antlr4.tree.Tree import TerminalNodeImpl, ParseTreeWalker
 
 import cpexp.antlr.CPExpListener
 from cpexp.generic.label import *
+from cpexp.generic.memory import PlaceManager, DataType, Place
 
 
 class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
@@ -10,6 +11,7 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
         self.token_value = token_value
         self.variable_attributes = {}
         self.labels = []
+        self.places = PlaceManager()
 
     def get_data(self, x):
         if type(x) == TerminalNodeImpl:
@@ -23,10 +25,36 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
         self.labels.append(ret)
         return ret
 
+    def new_temp(self, _type: DataType):
+        return self.places.new_temp(_type)
+
+    def new_global(self, name: str, _type: DataType):
+        return self.places.add_global(name, _type)
+
+    def convert_type(self, dst_type: DataType, src: Place) -> tuple[Place, list[ConvertInst]]:
+        # TODO: check if place is Constant, calculate during compile
+        src_type = src.type
+        if src_type == dst_type:
+            return src, []
+        dst = self.new_temp(dst_type)
+        code = ConvertInst(src_type, dst_type, src, dst)
+        return dst, [code]
+
+    def convert_types(self, *places: Place, type_require: DataType = None):
+        dst_type = max(list(map(lambda x: x.type, places)))
+        if type_require is not None:
+            dst_type = max(dst_type, type_require)
+        ret = [dst_type, []]
+        for p in places:
+            dst, code = self.convert_type(dst_type, p)
+            ret[1] += code
+            ret.append(dst)
+        return ret
+
     def analyze(self, ast):
         walker = ParseTreeWalker()
         walker.walk(self, ast)
-        return self.variable_attributes[ast].code
+        return self.places.alloc() + self.variable_attributes[ast].code
 
 
 class VA:
@@ -47,15 +75,16 @@ class VA:
 
 def parameterize_children(func):
     def wrapper(self, ctx):
+        args = list(filter(
+            lambda x: x != '_',
+            map(
+                lambda x: self.get_data(x),
+                [ctx] + list(ctx.getChildren())
+            )
+        ))
         func(
             self,
-            *filter(
-                lambda x: x != '_',
-                map(
-                    lambda x: self.get_data(x),
-                    [ctx] + list(ctx.getChildren())
-                )
-            )
+            *args
         )
 
     return wrapper

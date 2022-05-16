@@ -1,17 +1,17 @@
 from cpexp.ir.generator import *
 
 
-class TACGenerator(Generator):
+class TACPGenerator(Generator):
     def generate(self, tac: list[Instruction]) -> str:
         return ''.join(map(self.gen, tac))
 
     @Generator.gen.register
     def _(self, inst: DataInst):
-        return ''
+        return f'[{inst.name}({inst.bit}) = {inst.initial}]\n'
 
     @Generator.gen.register
     def _(self, inst: ConvertInst):
-        return f'\t{inst.dst} := {inst.src}\n'
+        return f'\t{inst.dst} := {inst.src_type}_to_{inst.dst_type}({inst.src})\n'
 
     @Generator.gen.register
     def _(self, inst: AssignInst):

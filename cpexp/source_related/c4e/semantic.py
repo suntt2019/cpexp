@@ -1,9 +1,10 @@
 import operator
 from functools import reduce
 
+from cpexp.generic.memory import Constant
 from cpexp.ir.instructions import *
-from cpexp.generic.memory import new_temp
 from cpexp.generic.semantic import Semantic, parameterize_children, VA
+from cpexp.source_related.c4e.memory import C4eType
 
 
 class C4eSemantic(Semantic):
@@ -15,6 +16,11 @@ class C4eSemantic(Semantic):
     @parameterize_children
     def exitAssignStatement(self, s: VA, _id, e: VA):
         s.code = e.code + [AssignInst(_id, e.place)]
+
+    @parameterize_children
+    def exitDeclareStatement(self, s: VA, _type, _id):
+        self.new_global(_id, C4eType(_type))
+        s.code = []
 
     @parameterize_children
     def enterIfStatement(self, s: VA, c: VA, s1: VA):
@@ -91,13 +97,14 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitAddExpression(self, e: VA, e1: VA, t: VA):
-        place = new_temp()
+        dst_type, code, _e1, _t = self.convert_types(e1.place, t.place)
+        place = self.new_temp(dst_type)
         e.place = place
-        e.code = e1.code + t.code + [AddInst(place, e1.place, t.place)]
+        e.code = e1.code + t.code + code + [AddInst(place, _e1, _t)]
 
     @parameterize_children
     def exitSubExpression(self, e: VA, e1: VA, t: VA):
-        place = new_temp()
+        place = self.new_temp(max(e1.place.type, t.place.type))
         e.place = place
         e.code = e1.code + t.code + [SubInst(place, e1.place, t.place)]
 
@@ -113,13 +120,13 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitMultipleTerm(self, t: VA, t1: VA, f: VA):
-        place = new_temp()
+        place = self.new_temp(max(t1.place.type, f.place.type))
         t.place = place
         t.code = t1.code + f.code + [MultipleInst(place, t1.place, f.place)]
 
     @parameterize_children
     def exitDivitionTerm(self, t: VA, t1: VA, f: VA):
-        place = new_temp()
+        place = self.new_temp(max(t1.place.type, f.place.type))
         t.place = place
         t.code = t1.code + f.code + [DivisionInst(place, t1.place, f.place)]
 
@@ -130,20 +137,20 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitIdentifierFactor(self, f: VA, _id):
-        f.place = _id
+        f.place = self.places[_id]
         f.code = []
 
     @parameterize_children
     def exitInt8Factor(self, f: VA, int8):
-        f.place = int8
+        f.place = Constant(C4eType('int'), int8)
         f.code = []
 
     @parameterize_children
     def exitInt10Factor(self, f: VA, int10):
-        f.place = int10
+        f.place = Constant(C4eType('int'), int10)
         f.code = []
 
     @parameterize_children
     def exitInt16Factor(self, f: VA, int16):
-        f.place = int16
+        f.place = Constant(C4eType('int'), int16)
         f.code = []

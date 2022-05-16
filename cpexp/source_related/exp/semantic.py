@@ -1,10 +1,12 @@
 from cpexp.ir.instructions import AssignInst, LabelInst, GotoInst, IfGotoInst, AddInst, SubInst, MultipleInst, \
     DivisionInst
-from cpexp.generic.memory import new_temp
 from cpexp.generic.semantic import Semantic, parameterize_children, VA
 
 
 class ExpSemantic(Semantic):
+
+    def new_temp(self):
+        return self.places.new_temp('')
 
     @parameterize_children
     def exitSingleProgram(self, p: VA, l: VA):
@@ -89,13 +91,13 @@ class ExpSemantic(Semantic):
 
     @parameterize_children
     def exitAddExpression(self, e: VA, e1: VA, t: VA):
-        place = new_temp()
+        place = self.new_temp()
         e.place = place
         e.code = e1.code + t.code + [AddInst(place, e1.place, t.place)]
 
     @parameterize_children
     def exitSubExpression(self, e: VA, e1: VA, t: VA):
-        place = new_temp()
+        place = self.new_temp()
         e.place = place
         e.code = e1.code + t.code + [SubInst(place, e1.place, t.place)]
 
@@ -111,13 +113,13 @@ class ExpSemantic(Semantic):
 
     @parameterize_children
     def exitMultipleTerm(self, t: VA, t1: VA, f: VA):
-        place = new_temp()
+        place = self.new_temp()
         t.place = place
         t.code = t1.code + f.code + [MultipleInst(place, t1.place, f.place)]
 
     @parameterize_children
     def exitDivitionTerm(self, t: VA, t1: VA, f: VA):
-        place = new_temp()
+        place = self.new_temp()
         t.place = place
         t.code = t1.code + f.code + [DivisionInst(place, t1.place, f.place)]
 
