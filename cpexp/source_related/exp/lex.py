@@ -9,7 +9,7 @@ import cpexp.antlr.CPExpLexer
 from cpexp.base import *
 
 
-class CPELexer(cpexp.antlr.CPExpLexer.CPExpLexer):
+class ExpLexer(cpexp.antlr.CPExpLexer.CPExpLexer):
     def __init__(self, input=None, output: TextIO = sys.stdout):
         super().__init__(input, output)
         self.token_values = []

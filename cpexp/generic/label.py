@@ -3,6 +3,8 @@ from __future__ import annotations
 from cpexp.ir.instructions import *
 
 
+# TODO: Label table
+
 class Label:
     def __init__(self, _id: int):
         self.id = _id

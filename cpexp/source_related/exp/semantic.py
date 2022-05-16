@@ -105,6 +105,11 @@ class ExpSemantic(Semantic):
         e.code = t.code
 
     @parameterize_children
+    def exitFactorTerm(self, t: VA, f: VA):
+        t.place = f.place
+        t.code = f.code
+
+    @parameterize_children
     def exitMultipleTerm(self, t: VA, t1: VA, f: VA):
         place = new_temp()
         t.place = place
@@ -115,11 +120,6 @@ class ExpSemantic(Semantic):
         place = new_temp()
         t.place = place
         t.code = t1.code + f.code + [DivisionInst(place, t1.place, f.place)]
-
-    @parameterize_children
-    def exitFactorTerm(self, t: VA, f: VA):
-        t.place = f.place
-        t.code = f.code
 
     @parameterize_children
     def exitBracketedFactor(self, f: VA, e: VA):
