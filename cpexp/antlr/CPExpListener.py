@@ -26,6 +26,15 @@ class CPExpListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by CPExpParser#SingleLine.
+    def enterSingleLine(self, ctx:CPExpParser.SingleLineContext):
+        pass
+
+    # Exit a parse tree produced by CPExpParser#SingleLine.
+    def exitSingleLine(self, ctx:CPExpParser.SingleLineContext):
+        pass
+
+
     # Enter a parse tree produced by CPExpParser#AssignStatement.
     def enterAssignStatement(self, ctx:CPExpParser.AssignStatementContext):
         pass

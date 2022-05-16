@@ -1,25 +1,57 @@
+import sys
+
 from antlr4 import *
 
 # Use "import X.Y" instead of "from X import Y" to make reloading available
 import cpexp.antlr.CPExpParser
-import cpexp.antlr.CPExpLexer
-from cpexp.source_related.exp.lex import *
+from cpexp.antlr.build import update
+from cpexp.generic.lexer import get_tokens, CPELexer
+from cpexp.ir.generator import Generator
 from cpexp.generic.semantic import *
-from cpexp.source_related.exp.semantic import ExpSemantic
-from cpexp.target_related.tac.generator import TACGenerator
+from cpexp.source_related.source import SourceLanguage
+
+
+class Compiler:
+    def __init__(self,
+                 lexer=CPELexer,
+                 parser=cpexp.antlr.CPExpParser.CPExpParser,
+                 semantic=Semantic,
+                 generator=Generator):
+        self.lexer = lexer
+        self.parser = parser
+        self.semantic = semantic
+        self.generator = generator
+
+    def run(self, input_stream: InputStream):
+        return Compile(input_stream, self.lexer, self.parser, self.semantic, self.generator)
 
 
 class Compile:
-    def __init__(self, input_stream: InputStream):
+    def __init__(self, input_stream: InputStream,
+                 lexer=CPELexer,
+                 parser=cpexp.antlr.CPExpParser.CPExpParser,
+                 semantic=Semantic,
+                 generator=Generator):
         self.input_s = input_stream
-        self.lexer = ExpLexer(self.input_s)
+        self.lexer = lexer(self.input_s)
         self.token_s = CommonTokenStream(self.lexer)
-        self.parser = cpexp.antlr.CPExpParser.CPExpParser(self.token_s)
+        self.parser = parser(self.token_s)
         self.ast = None
-        self.semantic_analyzer = ExpSemantic(self.lexer.token_values)
+        self.semantic_analyzer = semantic(self.lexer.get_token_values())
         self.tac = None
-        self.generator = TACGenerator()
+        self.generator = generator()
         self.result = None
+
+    def compile(self, *optimizers):
+        self.parse()
+        self.semantic()
+        self.optimize(*optimizers)
+        self.generate()
+        return self.result
+
+    def lex_tokens(self):
+        self.lex_only()
+        return self.get_tokens()
 
     def lex_only(self):
         self.token_s.fetch(sys.maxsize)
@@ -47,3 +79,38 @@ class Compile:
 
     def get_result(self):
         return self.result
+
+
+class LanguageCompiler(Compiler):
+    def __init__(self, source: SourceLanguage, generator=Generator):
+        self.source_name = source.name
+        super().__init__(lexer=source.lexer, parser=source.parser, semantic=source.semantic, generator=generator)
+
+    def run(self, input_stream: InputStream):
+        return CompileWithLanguage(input_stream, self.source_name,
+                                   lexer=self.lexer,
+                                   parser=self.parser,
+                                   semantic=self.semantic,
+                                   generator=self.generator)
+
+
+class CompileWithLanguage(Compile):
+    def __init__(self, input_stream: InputStream, source_name: str,
+                 lexer=CPELexer,
+                 parser=cpexp.antlr.CPExpParser.CPExpParser,
+                 semantic=Semantic,
+                 generator=Generator):
+        self.source_name = source_name
+        super().__init__(input_stream,
+                         lexer=lexer,
+                         parser=parser,
+                         semantic=semantic,
+                         generator=generator)
+
+    def lex_only(self):
+        update(self.source_name)
+        super().lex_only()
+
+    def parse(self):
+        update(self.source_name)
+        super().parse()

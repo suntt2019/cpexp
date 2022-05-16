@@ -1,12 +1,19 @@
-grammar CPExp; // cmm
+grammar CPExp; // exp
+// Simple grammar, just for smoke test
+//r: TOKEN+;
+//TOKEN: IDN | INT16 | REAL16 | INT8 | REAL8 | INT10 | REAL10 | ADD | SUB | MUL | DIV | LT | GT | EQ | LB | RB | SEM | IF | THEN | ELSE | WHILE | DO;
 
 p           // Program
-  : s       # SingleProgram
-  | s p     # AppendedProgram
+  : l       # SingleProgram
+  | l p     # AppendedProgram
+  ;
+
+l           // L
+  : s SEM   # SingleLine
   ;
 
 s                           // Statement
-  : IDN ASSIGN e SEM        # AssignStatement
+  : IDN EQ e                # AssignStatement
   | IF c THEN s             # IfStatement
   | IF c THEN s ELSE s      # IfElseStatement
   | WHILE c DO s            # WhileStatement
@@ -51,11 +58,11 @@ MUL: '*';
 DIV: '/';
 LT:  '<';
 GT:  '>';
-EQ:  '==';
+EQ:  '=';
 LP:  '(';  // Parentheses
 RP:  ')';
-ASSIGN: '=';
 SEM: ';';
+
 LB: '{';  // Braces
 RB: '}';
 

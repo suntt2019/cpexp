@@ -1,4 +1,4 @@
-grammar cmm;
+grammar c4e;
 
 
 p           // Program

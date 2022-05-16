@@ -1,24 +1,8 @@
-import os.path
-import sys
-from typing.io import TextIO
-
-from antlr4 import CommonTokenStream
-from antlr4.Token import CommonToken, Token
-import cpexp.antlr.CPExpLexer
-
-from cpexp.base import *
+from antlr4.Token import CommonToken
+from cpexp.generic.lexer import CPELexer
 
 
-class ExpLexer(cpexp.antlr.CPExpLexer.CPExpLexer):
-    def __init__(self, input=None, output: TextIO = sys.stdout):
-        super().__init__(input, output)
-        self.token_values = []
-
-    def nextToken(self):
-        token = super().nextToken()
-        self.token_values.append(self.token_value(token))
-        return token
-
+class ExpLexer(CPELexer):
     def token_value(self, token: CommonToken) -> any:
         txt = token.text
         ret = txt
@@ -48,7 +32,3 @@ class ExpLexer(cpexp.antlr.CPExpLexer.CPExpLexer):
         else:
             type_name = self.symbolicNames[type_id]
         return f'{type_name}\t{self.token_values[token.tokenIndex]}'
-
-
-def get_tokens(s: CommonTokenStream) -> list[CommonToken]:
-    return s.getTokens(0, sys.maxsize)
