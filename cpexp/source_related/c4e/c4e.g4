@@ -1,17 +1,17 @@
 grammar c4e;
 
 
-p           // Program
-  : s       # SingleProgram
-  | s p     # AppendedProgram
+b           // Block
+  : s*      # StatementsBlock
   ;
 
 s                           // Statement
   : IDN ASSIGN e SEM        # AssignStatement
-  | IF c THEN s             # IfStatement
-  | IF c THEN s ELSE s      # IfElseStatement
-  | WHILE c DO s            # WhileStatement
-  | LB p RB                 # BracketedStatement
+  | IF LP c RP s            # IfStatement
+  | IF LP c RP s ELSE s     # IfElseStatement
+  | WHILE LP c RP s         # WhileStatement
+  | SEM                     # EmptyStatement
+  | LB b RB                 # BracketedStatement
   ;
 
 c               // Condition

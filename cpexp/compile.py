@@ -57,7 +57,8 @@ class Compile:
         self.token_s.fetch(sys.maxsize)
 
     def parse(self):
-        self.ast = self.parser.p()
+        # TODO: refactor parser
+        self.ast = self.parser.b()
 
     def semantic(self):
         self.semantic_analyzer.analyze(self.ast)

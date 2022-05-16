@@ -50,7 +50,7 @@ def clean(verbose=False):
     for filename in os.listdir(directory):
         if filename.split('.')[-1] == 'g4':
             continue
-        if filename in ['__init__.py', 'build.py']:
+        if filename in ['__init__.py', 'build.py', '.gitignore']:
             continue
         if verbose:
             print(f'    Remove file {filename}')
