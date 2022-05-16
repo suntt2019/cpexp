@@ -1,4 +1,5 @@
-grammar CPExp; // cmm
+grammar cmm;
+
 
 p           // Program
   : s       # SingleProgram
