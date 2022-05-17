@@ -9,6 +9,16 @@ class DataInst(Instruction):
         self.initial = initial
 
 
+class FunctionStartInst(Instruction):
+    def __init__(self, function):
+        self.function = function
+
+
+class FunctionEndInst(Instruction):
+    def __init__(self, function):
+        self.function = function
+
+
 class ConvertInst(Instruction):
     # May refactor to subclasses for different types, eg: between integers, itr, rti...
     def __init__(self, src_type, dst_type, src, dst):
@@ -22,6 +32,17 @@ class AssignInst(Instruction):
     def __init__(self, left, right):
         self.left = left
         self.right = right
+
+
+class ReturnInst(Instruction):
+    def __init__(self, value):
+        self.value = value
+
+
+class CallInst(Instruction):
+    def __init__(self, place, function):
+        self.place = place
+        self.function = function
 
 
 class TwoOperandAssignInst(Instruction):

@@ -14,12 +14,38 @@ class TACPGenerator(Generator):
         return f'[{inst.name}({inst.bit}) = {inst.initial}]\n'
 
     @gen.register
+    def _(self, inst: FunctionStartInst):
+        return f'\n{inst.function} PROC\n' \
+               f'\t[REG <-> Stack operate(EBP, ESP...)]\n' \
+               f'\t[TODO: alloc parameters here]\n' \
+               f'\t[Store callee-saved registers]\n'
+
+
+    @gen.register
+    def _(self, inst: FunctionEndInst):
+        return f'\n{inst.function.name} ENDP\n'
+
+    @gen.register
     def _(self, inst: ConvertInst):
         return f'\t{inst.dst} := {inst.src_type}_to_{inst.dst_type}({inst.src})\n'
 
     @gen.register
     def _(self, inst: AssignInst):
         return f'\t{inst.left} := {inst.right}\n'
+
+    @gen.register
+    def _(self, inst: ReturnInst):
+        return f'\t[Recover callee-saved registers]\n' \
+               f'\t[REG <-> Stack operate(EBP, ESP...)(dealloc memory on stack)]\n' \
+               f'\treturn {inst.value}\n'
+
+    @gen.register
+    def _(self, inst: CallInst):
+        return f'\t[Store caller-saved registers]\n' \
+               f'\t[TODO: calculate and push parameters]\n' \
+               f'\t{inst.place} := {inst.function.name}()\n' \
+               f'\t[TODO: dealloc parameters from stack(add ESP)]\n' \
+               f'\t[Recover caller-saved registers]\n'
 
     @gen.register
     def _(self, inst: TwoOperandAssignInst):

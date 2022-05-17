@@ -39,6 +39,8 @@ def build(language: str, verbose=False):
     importlib.reload(cpexp.antlr.CPExpParser)
     importlib.reload(cpexp.antlr.CPExpLexer)
     importlib.reload(cpexp.antlr.CPExpListener)
+    # TODO: remove reloading since run the program again is needed
+    # Maybe also change "import X.Y" to "form X import Y"
     if verbose:
         print('Build finished.')
 

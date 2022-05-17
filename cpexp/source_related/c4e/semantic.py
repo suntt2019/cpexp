@@ -10,12 +10,45 @@ from cpexp.source_related.c4e.memory import C4eType
 class C4eSemantic(Semantic):
 
     @parameterize_children
+    def exitProgram(self, p: VA, b: VA, *f: VA):
+        p.code = b.code + reduce(lambda a, b: a + b.code, f, [])
+
+    @parameterize_children
+    def enterFunction(self, f: VA, _type, _id, b: VA):
+        func = self.new_function(_id, C4eType(_type))
+        self.context.enter_function(func)
+
+    @parameterize_children
+    def exitFunction(self, f: VA, _type, _id, b: VA):
+        func = self.context.function()
+        f.code = [FunctionStartInst(func)] \
+                 + b.code \
+                 + [FunctionEndInst(func)]
+        self.context.exit_function()
+
+    @parameterize_children
+    def exitDeclareBlock(self, b: VA, *s: VA):
+        b.code = reduce(lambda a, b: a + b.code, s, [])
+
+    @parameterize_children
     def exitStatementsBlock(self, p: VA, *s: VA):
         p.code = reduce(lambda a, b: a + b.code, s, [])
 
     @parameterize_children
+    def exitStatemenet(self, s: VA, s1: VA):
+        s.code = s1.code
+
+    @parameterize_children
     def exitAssignStatement(self, s: VA, _id, e: VA):
         s.code = e.code + [AssignInst(_id, e.place)]
+
+    @parameterize_children
+    def exitEmptyStatement(self, s: VA):
+        s.code = []
+
+    @parameterize_children
+    def exitExpressionStatement(self, s: VA, e: VA):
+        s.code = e.code
 
     @parameterize_children
     def exitDeclareStatement(self, s: VA, _type, _id):
@@ -73,8 +106,10 @@ class C4eSemantic(Semantic):
             s.code += [LabelInst(s.next)]
 
     @parameterize_children
-    def exitEmptyStatement(self, s: VA):
-        s.code = []
+    def exitReturnStatement(self, s: VA, e: VA):
+        func = self.context.function()
+        _e, code = self.convert_type(func.return_type, e.place)
+        s.code = e.code + code + [ReturnInst(_e)]
 
     @parameterize_children
     def exitBracketedStatement(self, s: VA, b: VA):
@@ -112,6 +147,12 @@ class C4eSemantic(Semantic):
     def exitTermExpression(self, e: VA, t: VA):
         e.place = t.place
         e.code = t.code
+
+    @parameterize_children
+    def exitCallExpression(self, s: VA, _id):
+        function = self.get_function(_id)
+        s.place = self.new_temp(function.return_type)
+        s.code = [CallInst(s.place, function)]
 
     @parameterize_children
     def exitFactorTerm(self, t: VA, f: VA):

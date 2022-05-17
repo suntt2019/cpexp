@@ -63,7 +63,7 @@ class PlaceManager:
     def __getitem__(self, name: str):
         # We only support global variable for now
         if name not in self.global_:
-            raise Exception(f'Unknown identifier {name}')
+            raise Exception(f'Undeclared variable {name}.')
         return self.global_[name]
 
     def alloc(self):

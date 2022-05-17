@@ -1,4 +1,5 @@
 import sys
+from io import StringIO
 
 from antlr4 import *
 
@@ -30,7 +31,7 @@ class Compiler:
 class Compile:
     def __init__(self, input_stream: InputStream,
                  lexer=CPELexer,
-                 parser=cpexp.antlr.CPExpParser.CPExpParser,
+                 parser=CPEParser,
                  semantic=Semantic,
                  generator=Generator):
         self.input_s = input_stream
@@ -39,7 +40,7 @@ class Compile:
         self.parser = parser(self.token_s)
         self.ast = None
         self.semantic_analyzer = semantic(self.lexer.get_token_values())
-        self.tac = None
+        self.ir = None
         self.generator = generator()
         self.result = None
 
@@ -59,23 +60,24 @@ class Compile:
 
     def parse(self):
         self.ast = self.parser.parse()
+        # TODO: check if error occur during parsing and raise error
 
     def semantic(self):
-        self.tac = self.semantic_analyzer.analyze(self.ast)
+        self.ir = self.semantic_analyzer.analyze(self.ast)
 
     def optimize(self, *optimizers):
         for func in optimizers:
-            self.tac = func(self.tac)
+            self.ir = func(self.ir)
 
     def generate(self):
-        self.result = self.generator.generate(self.tac)
+        self.result = self.generator.generate(self.ir)
 
     def get_tokens(self):
         return list(map(self.lexer.format_token, get_tokens(self.token_s)))
 
     # tac(3ac): three address code
     def get_tac(self):
-        return self.tac
+        return self.ir
 
     def get_result(self):
         return self.result
@@ -97,7 +99,7 @@ class LanguageCompiler(Compiler):
 class CompileWithLanguage(Compile):
     def __init__(self, input_stream: InputStream, source_name: str,
                  lexer=CPELexer,
-                 parser=cpexp.antlr.CPExpParser.CPExpParser,
+                 parser=CPEParser,
                  semantic=Semantic,
                  generator=Generator):
         self.source_name = source_name

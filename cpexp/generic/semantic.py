@@ -1,6 +1,8 @@
 from antlr4.tree.Tree import TerminalNodeImpl, ParseTreeWalker
 
 import cpexp.antlr.CPExpListener
+from cpexp.generic.context import Context
+from cpexp.generic.function import Function
 from cpexp.generic.label import *
 from cpexp.generic.memory import PlaceManager, DataType, Place
 
@@ -12,6 +14,8 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
         self.variable_attributes = {}
         self.labels = []
         self.places = PlaceManager()
+        self.functions = {}
+        self.context = Context()
 
     def get_data(self, x):
         if type(x) == TerminalNodeImpl:
@@ -31,8 +35,21 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
     def new_global(self, name: str, _type: DataType):
         return self.places.add_global(name, _type)
 
+    # TODO: refactor 'new_xxx' into a symbol table (symbol manager)
+    def new_function(self, name: str, return_type: DataType):
+        if name in self.functions:
+            raise Exception(f'Function "{name}" already exists.')
+        ret = Function(name, return_type)
+        self.functions[name] = ret
+        return ret
+
+    def get_function(self, name: str):
+        if name not in self.functions:
+            raise Exception(f'Undeclared function "{name}".')
+        return self.functions[name]
+
     def convert_type(self, dst_type: DataType, src: Place) -> tuple[Place, list[ConvertInst]]:
-        # TODO: check if place is Constant, calculate during compile
+        # TODO: check if place is Constant, calculate during compile; maybe do this in an optimizer
         src_type = src.type
         if src_type == dst_type:
             return src, []

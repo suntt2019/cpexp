@@ -1,19 +1,54 @@
 grammar c4e;
 
+program
+  : declare_block function*
+  ;
+
+declare_block
+  : declare_statement*  # DeclareBlock
+  ;
+
+function
+  : TYPE_ IDN LP RP LB block RB
+  ;
 
 block
-  : statemenet*     # StatementsBlock
+  : statemenet*         # StatementsBlock
   ;
 
 statemenet
-  : IDN ASSIGN expression SEM                       # AssignStatement
-  | TYPE_ IDN SEM                                   # DeclareStatement
+  : declare_statement
+  | value_statement
+  | control_flow_statement
+  | return_statement
+  | combined_statement
+  ;
+
+declare_statement
+  : TYPE_ IDN SEM       # DeclareStatement
+  ;
+
+value_statement
+  : IDN ASSIGN expression SEM       # AssignStatement
+  | expression SEM                  # ExpressionStatement
+  | SEM                             # EmptyStatement
+  ;
+
+control_flow_statement
+  : declare_statement                               # ToDeclareStatement
   | IF LP condition RP statemenet                   # IfStatement
   | IF LP condition RP statemenet ELSE statemenet   # IfElseStatement
   | WHILE LP condition RP statemenet                # WhileStatement
-  | SEM                                             # EmptyStatement
-  | LB block RB                                     # BracketedStatement
   ;
+
+return_statement
+  : RET expression SEM      # ReturnStatement
+  ;
+
+combined_statement
+  : LB block RB     # BracketedStatement
+  ;
+
 
 condition
   : expression GT expression      # GreaterCondition
@@ -25,6 +60,7 @@ expression
   : expression ADD term     # AddExpression
   | expression SUB term     # SubExpression
   | term                    # TermExpression
+  | IDN LP RP               # CallExpression
   ;
 
 term
@@ -46,6 +82,7 @@ THEN: 'then';
 ELSE: 'else';
 WHILE: 'while';
 DO: 'do';
+RET: 'return';
 
 
 ADD: '+';

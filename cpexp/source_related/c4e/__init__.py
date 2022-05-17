@@ -5,5 +5,5 @@ from cpexp.source_related.source import SourceLanguage
 
 source_language = SourceLanguage('c4e',
                                  lexer=C4eLexer,
-                                 parser=custom_start_parser('block'),
+                                 parser=custom_start_parser('program'),
                                  semantic=C4eSemantic)
