@@ -32,7 +32,7 @@ class Place:
         return self.name
 
     def alloc(self):
-        return DataInst(self.name, self.type.bits, self.initial)
+        return DataInst(self)
 
 
 class Constant(Place):
@@ -41,6 +41,15 @@ class Constant(Place):
 
     def __str__(self):
         return self.name[1:]
+
+
+class Local(Place):
+    def __init__(self, name: str, _type: DataType, address):
+        self.address = address
+        super().__init__(name, _type)
+
+    def __str__(self):
+        return f'{self.name}[at {self.address}]'
 
 
 class PlaceManager:
@@ -63,8 +72,9 @@ class PlaceManager:
     def __getitem__(self, name: str):
         # We only support global variable for now
         if name not in self.global_:
-            raise Exception(f'Undeclared variable {name}.')
-        return self.global_[name]
+            return None
+        else:
+            return self.global_[name]
 
     def alloc(self):
         ret = list(map(lambda x: x.alloc(), self.temp + list(self.global_.values())))

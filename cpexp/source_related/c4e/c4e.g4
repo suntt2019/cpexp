@@ -18,7 +18,11 @@ block
 
 statemenet
   : declare_statement
-  | value_statement
+  | non_declare_statement
+  ;
+
+non_declare_statement
+  : value_statement
   | control_flow_statement
   | return_statement
   | combined_statement
@@ -109,3 +113,5 @@ INT10: '0'|[1-9][0-9]*;
 REAL10: INT10'.'[0-9]+;
 
 WS : [ \r\t\n]+ -> skip ;
+BLOCK_COMMENT: '/*' .*? '*/' -> skip;
+LINE_COMMENT: '//' ~[\r\n]* -> skip;

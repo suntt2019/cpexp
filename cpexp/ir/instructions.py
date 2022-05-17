@@ -3,10 +3,8 @@ class Instruction:
 
 
 class DataInst(Instruction):
-    def __init__(self, name: str, bits: int, initial: any):
-        self.name = name
-        self.bit = bits
-        self.initial = initial
+    def __init__(self, place):
+        self.place = place
 
 
 class FunctionStartInst(Instruction):
@@ -43,6 +41,11 @@ class CallInst(Instruction):
     def __init__(self, place, function):
         self.place = place
         self.function = function
+
+
+class AllocInst(Instruction):
+    def __init__(self, local):
+        self.local = local
 
 
 class TwoOperandAssignInst(Instruction):

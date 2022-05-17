@@ -16,15 +16,15 @@ class C4eSemantic(Semantic):
     @parameterize_children
     def enterFunction(self, f: VA, _type, _id, b: VA):
         func = self.new_function(_id, C4eType(_type))
-        self.context.enter_function(func)
+        self.enter(func)
 
     @parameterize_children
     def exitFunction(self, f: VA, _type, _id, b: VA):
-        func = self.context.function()
+        func = self.context.function
         f.code = [FunctionStartInst(func)] \
                  + b.code \
                  + [FunctionEndInst(func)]
-        self.context.exit_function()
+        self.exit()
 
     @parameterize_children
     def exitDeclareBlock(self, b: VA, *s: VA):
@@ -39,8 +39,12 @@ class C4eSemantic(Semantic):
         s.code = s1.code
 
     @parameterize_children
+    def exitNon_declare_statement(self, s: VA, s1: VA):
+        s.code = s1.code
+
+    @parameterize_children
     def exitAssignStatement(self, s: VA, _id, e: VA):
-        s.code = e.code + [AssignInst(_id, e.place)]
+        s.code = e.code + [AssignInst(self.get_variable(_id), e.place)]
 
     @parameterize_children
     def exitEmptyStatement(self, s: VA):
@@ -52,8 +56,12 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitDeclareStatement(self, s: VA, _type, _id):
-        self.new_global(_id, C4eType(_type))
-        s.code = []
+        if self.context.function is None:
+            self.new_global(_id, C4eType(_type))
+            s.code = []
+        else:
+            place = self.new_local(_id, C4eType(_type))
+            s.code = [AllocInst(place)]
 
     @parameterize_children
     def enterIfStatement(self, s: VA, c: VA, s1: VA):
@@ -107,13 +115,18 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitReturnStatement(self, s: VA, e: VA):
-        func = self.context.function()
+        func = self.context.function
         _e, code = self.convert_type(func.return_type, e.place)
         s.code = e.code + code + [ReturnInst(_e)]
 
     @parameterize_children
+    def enterBracketedStatement(self, s: VA, b: VA):
+        self.enter()
+
+    @parameterize_children
     def exitBracketedStatement(self, s: VA, b: VA):
         s.code = b.code
+        self.exit()
 
     @parameterize_children
     def exitGreaterCondition(self, c: VA, e1: VA, e2: VA):
@@ -178,7 +191,7 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitIdentifierFactor(self, f: VA, _id):
-        f.place = self.places[_id]
+        f.place = self.get_variable(_id)
         f.code = []
 
     @parameterize_children

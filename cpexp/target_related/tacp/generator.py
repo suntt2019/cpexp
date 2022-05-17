@@ -11,7 +11,7 @@ class TACPGenerator(Generator):
 
     @gen.register
     def _(self, inst: DataInst):
-        return f'[{inst.name}({inst.bit}) = {inst.initial}]\n'
+        return f'[{inst.place.name}({inst.place.type.bits}) = {inst.place.initial}]\n'
 
     @gen.register
     def _(self, inst: FunctionStartInst):
@@ -46,6 +46,10 @@ class TACPGenerator(Generator):
                f'\t{inst.place} := {inst.function.name}()\n' \
                f'\t[TODO: dealloc parameters from stack(add ESP)]\n' \
                f'\t[Recover caller-saved registers]\n'
+
+    @gen.register
+    def _(self, inst: AllocInst):
+        return f'\t[Alloc on stack {inst.local.name}({inst.local.type.bits}) = {inst.local.initial} at {inst.local.address}]\n'
 
     @gen.register
     def _(self, inst: TwoOperandAssignInst):

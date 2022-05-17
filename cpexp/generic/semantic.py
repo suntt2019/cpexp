@@ -35,7 +35,24 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
     def new_global(self, name: str, _type: DataType):
         return self.places.add_global(name, _type)
 
+    def new_local(self, name: str, _type: DataType):
+        return self.context.add_local(name, _type)
+
+    def get_variable(self, name: str):
+        local = self.context[name]
+        if local is not None:
+            return local
+        _global = self.places[name]
+        if _global is not None:
+            return _global
+        if name in self.functions:
+            raise Exception(f'Function {name} is not a variable.')
+        raise Exception(f'Undeclared variable {name}.')
+
     # TODO: refactor 'new_xxx' into a symbol table (symbol manager)
+    # Structure: (memory, label, function) -> (symbol table, context)
+    # For context free symbols, in the symbol table
+    # For context related symbols, in the context
     def new_function(self, name: str, return_type: DataType):
         if name in self.functions:
             raise Exception(f'Function "{name}" already exists.')
@@ -67,6 +84,12 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
             ret[1] += code
             ret.append(dst)
         return ret
+
+    def enter(self, func=None):
+        self.context = self.context.enter(func)
+
+    def exit(self):
+        self.context = self.context.exit()
 
     def analyze(self, ast):
         walker = ParseTreeWalker()
