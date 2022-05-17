@@ -96,3 +96,5 @@ def update(language, verbose=False, force_update=False):
     clean(verbose=verbose)
     build(language, verbose=verbose)
     print('Rebuild finished.')
+    print('Please run the program again to compile.')
+    exit(1)

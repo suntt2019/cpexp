@@ -4,7 +4,9 @@ from cpexp.ir.instructions import DataInst, ConvertInst
 
 
 class DataType:
-    types = {}
+    types = {
+        '_': (0, 0),
+    }
 
     def __init__(self, name: str):
         self.name = name

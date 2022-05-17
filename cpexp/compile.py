@@ -6,6 +6,7 @@ from antlr4 import *
 import cpexp.antlr.CPExpParser
 from cpexp.antlr.build import update
 from cpexp.generic.lexer import get_tokens, CPELexer
+from cpexp.generic.parser import CPEParser
 from cpexp.ir.generator import Generator
 from cpexp.generic.semantic import *
 from cpexp.source_related.source import SourceLanguage
@@ -14,7 +15,7 @@ from cpexp.source_related.source import SourceLanguage
 class Compiler:
     def __init__(self,
                  lexer=CPELexer,
-                 parser=cpexp.antlr.CPExpParser.CPExpParser,
+                 parser=CPEParser,
                  semantic=Semantic,
                  generator=Generator):
         self.lexer = lexer
@@ -57,8 +58,7 @@ class Compile:
         self.token_s.fetch(sys.maxsize)
 
     def parse(self):
-        # TODO: refactor parser
-        self.ast = self.parser.b()
+        self.ast = self.parser.parse()
 
     def semantic(self):
         self.tac = self.semantic_analyzer.analyze(self.ast)

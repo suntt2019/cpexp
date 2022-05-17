@@ -1,44 +1,44 @@
 grammar c4e;
 
 
-b           // Block
-  : s*      # StatementsBlock
+block
+  : statemenet*     # StatementsBlock
   ;
 
-s                           // Statement
-  : IDN ASSIGN e SEM        # AssignStatement
-  | TYPE_ IDN SEM           # DeclareStatement
-  | IF LP c RP s            # IfStatement
-  | IF LP c RP s ELSE s     # IfElseStatement
-  | WHILE LP c RP s         # WhileStatement
-  | SEM                     # EmptyStatement
-  | LB b RB                 # BracketedStatement
+statemenet
+  : IDN ASSIGN expression SEM                       # AssignStatement
+  | TYPE_ IDN SEM                                   # DeclareStatement
+  | IF LP condition RP statemenet                   # IfStatement
+  | IF LP condition RP statemenet ELSE statemenet   # IfElseStatement
+  | WHILE LP condition RP statemenet                # WhileStatement
+  | SEM                                             # EmptyStatement
+  | LB block RB                                     # BracketedStatement
   ;
 
-c               // Condition
-  : e GT e      # GreaterCondition
-  | e LT e      # LessCondition
-  | e EQ e      # EqualCondition
+condition
+  : expression GT expression      # GreaterCondition
+  | expression LT expression      # LessCondition
+  | expression EQ expression      # EqualCondition
   ;
 
-e               // Expression
-  : e ADD t     # AddExpression
-  | e SUB t     # SubExpression
-  | t           # TermExpression
+expression
+  : expression ADD term     # AddExpression
+  | expression SUB term     # SubExpression
+  | term                    # TermExpression
   ;
 
-t               // Term
-  : f           # FactorTerm
-  | t MUL f     # MultipleTerm
-  | t DIV f     # DivitionTerm
+term
+  : factor              # FactorTerm
+  | term MUL factor     # MultipleTerm
+  | term DIV factor     # DivitionTerm
   ;
 
-f               // Factor
-  : LP e RP     # BracketedFactor
-  | IDN         # IdentifierFactor
-  | INT8        # Int8Factor
-  | INT10       # Int10Factor
-  | INT16       # Int16Factor
+factor
+  : LP expression RP    # BracketedFactor
+  | IDN                 # IdentifierFactor
+  | INT8                # Int8Factor
+  | INT10               # Int10Factor
+  | INT16               # Int16Factor
   ;
 
 IF: 'if';
