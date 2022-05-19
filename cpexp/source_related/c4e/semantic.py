@@ -1,5 +1,6 @@
 import operator
 from functools import reduce
+from itertools import zip_longest
 
 from cpexp.generic.memory import Constant
 from cpexp.ir.instructions import *
@@ -14,14 +15,30 @@ class C4eSemantic(Semantic):
         p.code = b.code + reduce(lambda a, b: a + b.code, f, [])
 
     @parameterize_children
-    def enterFunction(self, f: VA, _type, _id, b: VA):
-        func = self.new_function(_id, C4eType(_type))
-        self.enter(func)
+    def enterFunctionDefinition(self, f: VA, fp: VA, fb: VA):
+        fb['prototype'] = fp
 
     @parameterize_children
-    def exitFunction(self, f: VA, _type, _id, b: VA):
-        func = self.context.function
-        f.code = [FunctionStartInst(func)] \
+    def exitFunctionDefinition(self, f: VA, fp: VA, fb: VA):
+        f.code = fb.code
+
+    @parameterize_children
+    def exitFunctionPrototype(self, fp: VA, _type, _id, *param_list):
+        # Merge each two elements into a tuple in a list
+        # Reference: https://segmentfault.com/q/1010000007881319
+        parameters = []
+        for param_type, param_id in zip_longest(*([iter(param_list)] * 2)):
+            parameters.append((C4eType(param_type), param_id))
+        fp['func'] = self.new_function(_id, C4eType(_type), parameters)
+
+    @parameterize_children
+    def enterFunctionBody(self, fb: VA, b: VA):
+        self.enter(fb['prototype']['func'])
+
+    @parameterize_children
+    def exitFunctionBody(self, fb: VA, b: VA):
+        func = fb['prototype']['func']
+        fb.code = [FunctionStartInst(func)] \
                  + b.code \
                  + [FunctionEndInst(func)]
         self.exit()
@@ -162,10 +179,15 @@ class C4eSemantic(Semantic):
         e.code = t.code
 
     @parameterize_children
-    def exitCallExpression(self, s: VA, _id):
-        function = self.get_function(_id)
-        s.place = self.new_temp(function.return_type)
-        s.code = [CallInst(s.place, function)]
+    def exitCallExpression(self, s: VA, _id, *e: VA):
+        arg_code = reduce(lambda a, b: a + b.code, e, [])
+        arg_places = list(map(lambda x: x.place, e))
+        arg_types = list(map(lambda x: x.type, arg_places))
+        func = self.get_function(_id, arg_types)
+        param_types = list(map(lambda x: x[0], func.param_list))
+        _arg_places, arg_conv_code = self.convert_type_list(arg_places, param_types)
+        s.place = self.new_temp(func.return_type)
+        s.code = arg_code + arg_conv_code + [CallInst(s.place, func, _arg_places)]
 
     @parameterize_children
     def exitFactorTerm(self, t: VA, f: VA):

@@ -8,6 +8,11 @@ class Context:
         self.outer = outer
         self._function = func
         self.locals = {}
+        if func is not None:
+            address = 0
+            for _type, _id in func.param_list:
+                address += _type.bits
+                self.add_local_variable(_id, _type, address)
 
     def enter(self, func=None):
         inner = Context(self, func)
@@ -27,10 +32,13 @@ class Context:
             return self._function
 
     def add_local(self, name: str, _type: DataType):
+        address = -self.function.use_memory(_type.bits)
+        return self.add_local_variable(name, _type, address)
+
+    def add_local_variable(self, name: str, _type: DataType, address: int):
         if name in self.locals:
             raise Exception(f'Local variable {name} already exists.')
-        self.function.use_memory(_type.bits)
-        local = Local(name, _type, self.function.memory_used)
+        local = Local(name, _type, address)
         self.locals[name] = local
         return local
 

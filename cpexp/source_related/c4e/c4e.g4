@@ -1,15 +1,23 @@
 grammar c4e;
 
 program
-  : declare_block function*
+  : declare_block function_definition*
   ;
 
 declare_block
   : declare_statement*  # DeclareBlock
   ;
 
-function
-  : TYPE_ IDN LP RP LB block RB
+function_definition
+  :  function_prototype function_body       # FunctionDefinition
+  ;
+
+function_prototype
+  : TYPE_ IDN LP ((TYPE_ IDN COMMA)* TYPE_ IDN)? RP     # FunctionPrototype
+  ;
+
+function_body
+  : LB block RB     # FunctionBody
   ;
 
 block
@@ -39,10 +47,9 @@ value_statement
   ;
 
 control_flow_statement
-  : declare_statement                               # ToDeclareStatement
-  | IF LP condition RP statemenet                   # IfStatement
-  | IF LP condition RP statemenet ELSE statemenet   # IfElseStatement
-  | WHILE LP condition RP statemenet                # WhileStatement
+  : IF LP condition RP non_declare_statement                    # IfStatement
+  | IF LP condition RP statemenet ELSE non_declare_statement    # IfElseStatement
+  | WHILE LP condition RP non_declare_statement                 # WhileStatement
   ;
 
 return_statement
@@ -61,10 +68,10 @@ condition
   ;
 
 expression
-  : expression ADD term     # AddExpression
-  | expression SUB term     # SubExpression
-  | term                    # TermExpression
-  | IDN LP RP               # CallExpression
+  : expression ADD term                             # AddExpression
+  | expression SUB term                             # SubExpression
+  | term                                            # TermExpression
+  | IDN LP ((expression COMMA)* expression)? RP     # CallExpression
   ;
 
 term
@@ -99,6 +106,7 @@ EQ:  '==';
 LP:  '(';  // Parentheses
 RP:  ')';
 ASSIGN: '=';
+COMMA: ',';
 SEM: ';';
 LB: '{';  // Braces
 RB: '}';

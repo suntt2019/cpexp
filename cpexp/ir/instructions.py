@@ -38,9 +38,10 @@ class ReturnInst(Instruction):
 
 
 class CallInst(Instruction):
-    def __init__(self, place, function):
+    def __init__(self, place, func, arguments):
         self.place = place
-        self.function = function
+        self.function = func
+        self.arguments = arguments
 
 
 class AllocInst(Instruction):

@@ -53,14 +53,15 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
     # Structure: (memory, label, function) -> (symbol table, context)
     # For context free symbols, in the symbol table
     # For context related symbols, in the context
-    def new_function(self, name: str, return_type: DataType):
+    def new_function(self, name: str, return_type: DataType, param_types: list[tuple[DataType, str]]):
         if name in self.functions:
             raise Exception(f'Function "{name}" already exists.')
-        ret = Function(name, return_type)
+        ret = Function(name, return_type, param_types)
         self.functions[name] = ret
         return ret
 
-    def get_function(self, name: str):
+    def get_function(self, name: str, param_types: list[DataType] = None):
+        # TODO: add function overload
         if name not in self.functions:
             raise Exception(f'Undeclared function "{name}".')
         return self.functions[name]
@@ -85,6 +86,17 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
             ret.append(dst)
         return ret
 
+    def convert_type_list(self, places: list[Place], types: list[DataType]) -> tuple[list[Place], list[Instruction]]:
+        _places = []
+        code = []
+        if len(places) != len(types):
+            raise Exception(f"Count of places({len(places)}) and types({len(types)}) doesn't match")
+        for arg_place, _type in zip(places, types):
+            _place, c = self.convert_type(_type, arg_place)
+            _places.append(_place)
+            code += c
+        return _places, code
+
     def enter(self, func=None):
         self.context = self.context.enter(func)
 
@@ -107,10 +119,17 @@ class VA:
         self.next = None
         self.true = None
         self.false = None
+        self.other = {}
         self.gen_s_next = False
 
     def __str__(self):
         return f'(code={self.code}, place={self.place})'
+
+    def __getitem__(self, item):
+        return self.other[item]
+
+    def __setitem__(self, key, value):
+        self.other[key] = value
 
 
 def parameterize_children(func):

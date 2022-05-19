@@ -17,9 +17,7 @@ class TACPGenerator(Generator):
     def _(self, inst: FunctionStartInst):
         return f'\n{inst.function} PROC\n' \
                f'\t[REG <-> Stack operate(EBP, ESP...)]\n' \
-               f'\t[TODO: alloc parameters here]\n' \
                f'\t[Store callee-saved registers]\n'
-
 
     @gen.register
     def _(self, inst: FunctionEndInst):
@@ -41,11 +39,11 @@ class TACPGenerator(Generator):
 
     @gen.register
     def _(self, inst: CallInst):
-        return f'\t[Store caller-saved registers]\n' \
-               f'\t[TODO: calculate and push parameters]\n' \
+        return f'\t[Push arguments: {", ".join(list(map(str, inst.arguments)))}]\n' \
+               f'\t[Store caller-saved registers]\n' \
                f'\t{inst.place} := {inst.function.name}()\n' \
-               f'\t[TODO: dealloc parameters from stack(add ESP)]\n' \
-               f'\t[Recover caller-saved registers]\n'
+               f'\t[Recover caller-saved registers]\n' \
+               f'\t[Dealloc arguments from stack(add ESP)]\n'
 
     @gen.register
     def _(self, inst: AllocInst):

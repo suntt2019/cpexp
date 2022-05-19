@@ -1,35 +1,16 @@
-int i;
-int j;
-float sum;
-float a;
+int a;
 float b;
-float c;
 
-// line comment
-/* block comment */
-/*
- * comment
- * in multiple
- * lines
- */
-
-float foo() {
-    j = 0;
-    c = a + b;
-    return 2;
+float add(int i, float f) {
+    return i + f;
 }
 
 int main() {
-    i=0;
-    int k;
-    int j;
-    k = j;
-    while(i<10) {
-        int j;
-        i=j+i;
-        sum = sum + i;
-        sum = foo();
-    }
-    j = k;
+    // With convert
+    a = add(b*2, a+1);
+    // Without convert
+    float a;
+    int b;
+    a = add(b, a);
     return 0;
 }
