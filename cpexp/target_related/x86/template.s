@@ -1,17 +1,17 @@
 global    _start
 
-    section   .data
+    section .data
     start_message:  db        "Start:", 10
 
     section .bss
     print_int_tmp: resb 10  ; int64 max 10 digits
 
-    section   .text
-print_int:                  ; Function: print_int(int64 x)
+    section .text
+_print_int:                 ; Function: print_int(int64 x)
     push    rbp
     mov     rbp, rsp
 
-    mov     rax, [rbp+16]    ; Save parameter to rax
+    mov     rax, [rbp+16]   ; Save parameter to rax
     mov     rdi, print_int_tmp
     add     rdi, 9          ; Init addr, add tmp max_size -1
     mov     rbx, 10         ; BX = 10
@@ -37,10 +37,10 @@ print_int_loop:             ; do {
     mov     rsp, rbp
     pop     rbp
     ret
-
 ; PREFIX_END
+    section .text
 _main:
-    mov     rax, 65434
+    mov     rax, 1234
     push    rax
     call    print_int
     add     rsp, 8
@@ -49,6 +49,7 @@ _main:
     ret
 ; SUFFIX_BEGIN
 
+    section .text
 _start:
     mov     rax, 1
     mov     rdi, 1

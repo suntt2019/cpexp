@@ -19,8 +19,12 @@ class C4eSemantic(Semantic):
         fb['prototype'] = fp
 
     @parameterize_children
-    def exitFunctionDefinition(self, f: VA, fp: VA, fb: VA):
-        f.code = fb.code
+    def exitFunctionDefinition(self, fd: VA, fp: VA, fb: VA):
+        fd.code = fb.code
+
+    @parameterize_children
+    def exitFunctionDeclaration(self, fd: VA, fp: VA):
+        fd.code = []
 
     @parameterize_children
     def exitFunctionPrototype(self, fp: VA, _type, _id, *param_list):
@@ -144,6 +148,10 @@ class C4eSemantic(Semantic):
     def exitBracketedStatement(self, s: VA, b: VA):
         s.code = b.code
         self.exit()
+
+    @parameterize_children
+    def exitAsmStatement(self, s: VA, string):
+        s.code = [AsmInst(string)]
 
     @parameterize_children
     def exitGreaterCondition(self, c: VA, e1: VA, e2: VA):

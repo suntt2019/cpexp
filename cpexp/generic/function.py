@@ -1,3 +1,5 @@
+import math
+
 from cpexp.generic.memory import DataType
 
 
@@ -7,6 +9,7 @@ class Function:
         self.return_type = return_type
         self.memory_used = 0
         self.param_list = param_list
+        self.param_size = sum(map(lambda x: math.ceil(x[0].bits / 8), param_list))
         # When add overload and function declaration,
         #   add self.definition to mark if function has been defined and where it's defined
 

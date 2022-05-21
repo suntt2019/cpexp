@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from cpexp.ir.instructions import DataInst, ConvertInst
+from cpexp.ir.instructions import *
 
 
 class DataType:
@@ -33,7 +33,7 @@ class Place:
         self.initial = initial
 
     def __repr__(self):
-        return self.name
+        return f'[{self.name}]'
 
     def alloc(self):
         return DataInst(self)
@@ -81,5 +81,5 @@ class PlaceManager:
             return self.global_[name]
 
     def alloc(self):
-        ret = list(map(lambda x: x.alloc(), self.temp + list(self.global_.values())))
+        ret = [SectionStartInst('data')] + list(map(lambda x: x.alloc(), self.temp + list(self.global_.values())))
         return ret

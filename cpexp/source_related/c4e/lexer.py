@@ -23,6 +23,8 @@ class C4eLexer(CPELexer):
             integral, dec = txt[prefix_digit:].split('.')
             a = int(integral + dec, base)
             ret = a / (base ** len(dec))
+        elif type_name == 'STR':
+            ret = txt[1:-1]
         return ret
 
     def format_token(self, token: CommonToken) -> str:

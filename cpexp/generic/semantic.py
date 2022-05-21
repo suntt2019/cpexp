@@ -106,7 +106,7 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
     def analyze(self, ast):
         walker = ParseTreeWalker()
         walker.walk(self, ast)
-        return self.places.alloc() + self.variable_attributes[ast].code
+        return self.places.alloc() + [SectionStartInst('text')] + self.variable_attributes[ast].code
 
 
 class VA:

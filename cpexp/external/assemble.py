@@ -9,12 +9,20 @@ nasm_path = 'nasm'
 ld_path = 'ld'
 
 
-def assemble(code: str, clean=True, verbose=0, output_path=os.path.join(working_dir, '..', 'a.out')):
+def assemble(code: str, clean=True, verbose=0, output_path=os.path.join(working_dir, '..', 'a.out'),
+             directory: str = None):
     if verbose > 0:
         print('Assembling...')
-    directory = tempfile.mkdtemp()
+    if directory is None:
+        directory = tempfile.mkdtemp()
     asm_file = os.path.join(directory, 'temp.s')
     obj_file = os.path.join(directory, 'temp.o')
+    if os.path.exists(asm_file):
+        os.remove(asm_file)
+    if os.path.exists(obj_file):
+        os.remove(obj_file)
+    if os.path.exists(output_path):
+        os.remove(output_path)
     with open(asm_file, 'w') as f:
         f.write(code)
     f.close()

@@ -1,3 +1,5 @@
+import os.path
+
 import cpexp.source_related.exp
 import cpexp.source_related.c4e
 from cpexp.base import working_dir
@@ -18,9 +20,10 @@ compiles = [
     # LanguageCompiler(c4e, TACPGenerator).run(FileStream('test.c4e')),
     LanguageCompiler(c4e, X86Generator).run(FileStream('test.c4e')),
 ]
-v = 1
+v = 0
 c = compiles[0]
 code = c.compile(merge_labels, rename_labels, verbose=v)
-# print(code)
-assemble(code, clean=False, verbose=v)
+print(code)
+# input()
+assemble(code, clean=False, verbose=v, directory=os.path.join(working_dir, '..', 'assembly'))
 run(verbose=v)

@@ -2,6 +2,11 @@ class Instruction:
     pass
 
 
+class SectionStartInst(Instruction):
+    def __init__(self, name: str):
+        self.name = name
+
+
 class DataInst(Instruction):
     def __init__(self, place):
         self.place = place
@@ -99,3 +104,8 @@ class GotoInst(WithLabelInst):
 class LabelInst(WithLabelInst):
     def __init__(self, label):
         super().__init__(label)
+
+
+class AsmInst(Instruction):
+    def __init__(self, code: str):
+        self.code = code

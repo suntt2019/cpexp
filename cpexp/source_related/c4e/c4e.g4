@@ -5,7 +5,11 @@ program
   ;
 
 declare_block
-  : declare_statement*  # DeclareBlock
+  : (declare_statement|function_declaration|asm_statement)*  # DeclareBlock
+  ;
+
+function_declaration
+  : function_prototype SEM      # FunctionDeclaration
   ;
 
 function_definition
@@ -34,6 +38,7 @@ non_declare_statement
   | control_flow_statement
   | return_statement
   | combined_statement
+  | asm_statement
   ;
 
 declare_statement
@@ -60,6 +65,9 @@ combined_statement
   : LB block RB     # BracketedStatement
   ;
 
+asm_statement
+  : ASM LP STR RP SEM   # AsmStatement
+  ;
 
 condition
   : expression GT expression      # GreaterCondition
@@ -88,12 +96,14 @@ factor
   | INT16               # Int16Factor
   ;
 
+
 IF: 'if';
 THEN: 'then';
 ELSE: 'else';
 WHILE: 'while';
 DO: 'do';
 RET: 'return';
+ASM: 'asm';
 
 
 ADD: '+';
@@ -119,6 +129,7 @@ INT8: '0'[1-7][0-7]*;
 REAL8: INT8'.'[0-7]+;
 INT10: '0'|[1-9][0-9]*;
 REAL10: INT10'.'[0-9]+;
+STR: '"'.*?'"';
 
 WS : [ \r\t\n]+ -> skip ;
 BLOCK_COMMENT: '/*' .*? '*/' -> skip;
