@@ -65,7 +65,9 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitAssignStatement(self, s: VA, _id, e: VA):
-        s.code = e.code + [AssignInst(self.get_variable(_id), e.place)]
+        target = self.get_variable(_id)
+        _e, code = self.convert_type(target.type, e.place)
+        s.code = e.code + code + [AssignInst(target, _e)]
 
     @parameterize_children
     def exitEmptyStatement(self, s: VA):
@@ -113,7 +115,7 @@ class C4eSemantic(Semantic):
     @parameterize_children
     def exitIfElseStatement(self, s: VA, c: VA, s1: VA, s2: VA):
         s.code = c.code + [LabelInst(c.true)] + s1.code \
-                 + [LabelInst(c.false)] + s2.code
+                 + [GotoInst(s.next), LabelInst(c.false)] + s2.code
         if s.gen_s_next:
             s.code += [LabelInst(s.next)]
 
@@ -155,18 +157,21 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitGreaterCondition(self, c: VA, e1: VA, e2: VA):
-        c.code = e1.code + e2.code \
-                 + [IfGotoInst(e1.place, '>', e2.place, c.true), GotoInst(c.false)]
+        dst_type, code, _e1, _e2 = self.convert_types(e1.place, e2.place)
+        c.code = e1.code + e2.code + code \
+                 + [IfGotoInst(_e1, '>', _e2, c.true), GotoInst(c.false)]
 
     @parameterize_children
     def exitLessCondition(self, c: VA, e1: VA, e2: VA):
-        c.code = e1.code + e2.code \
-                 + [IfGotoInst(e1.place, '<', e2.place, c.true), GotoInst(c.false)]
+        dst_type, code, _e1, _e2 = self.convert_types(e1.place, e2.place)
+        c.code = e1.code + e2.code + code \
+                 + [IfGotoInst(_e1, '<', _e2, c.true), GotoInst(c.false)]
 
     @parameterize_children
     def exitEqualCondition(self, c: VA, e1: VA, e2: VA):
-        c.code = e1.code + e2.code \
-                 + [IfGotoInst(e1.place, '=', e2.place, c.true), GotoInst(c.false)]
+        dst_type, code, _e1, _e2 = self.convert_types(e1.place, e2.place)
+        c.code = e1.code + e2.code + code \
+                 + [IfGotoInst(_e1, '==', _e2, c.true), GotoInst(c.false)]
 
     @parameterize_children
     def exitAddExpression(self, e: VA, e1: VA, t: VA):
@@ -226,15 +231,30 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitInt8Factor(self, f: VA, int8):
-        f.place = Constant(C4eType('int'), int8)
+        f.place = Constant(C4eType('long'), int8)
         f.code = []
 
     @parameterize_children
     def exitInt10Factor(self, f: VA, int10):
-        f.place = Constant(C4eType('int'), int10)
+        f.place = Constant(C4eType('long'), int10)
         f.code = []
 
     @parameterize_children
     def exitInt16Factor(self, f: VA, int16):
-        f.place = Constant(C4eType('int'), int16)
+        f.place = Constant(C4eType('long'), int16)
+        f.code = []
+
+    @parameterize_children
+    def exitReal8Factor(self, f: VA, float8):
+        f.place = Constant(C4eType('float'), float8)
+        f.code = []
+
+    @parameterize_children
+    def exitReal10Factor(self, f: VA, float10):
+        f.place = Constant(C4eType('float'), float10)
+        f.code = []
+
+    @parameterize_children
+    def exitReal16Factor(self, f: VA, float16):
+        f.place = Constant(C4eType('float'), float16)
         f.code = []

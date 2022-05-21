@@ -60,6 +60,6 @@ _start:
     call    _main
 
     ; System call exit(60): (rax, rdi) = (60, exit_code)
-    MOV     rdi, rax
+    mov     rdi, rax
     mov     rax, 60
     syscall

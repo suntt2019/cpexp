@@ -27,3 +27,7 @@ class Generator:
     @gen.register
     def _(self, inst: Instruction):
         raise Exception(f'Unable to generate from type {inst.__class__.__name__} instructions')
+
+
+class TargetInst:  # Target Instruction
+    pass

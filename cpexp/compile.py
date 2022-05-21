@@ -88,7 +88,7 @@ class Compile:
         return list(map(self.lexer.format_token, get_tokens(self.token_s)))
 
     # tac(3ac): three address code
-    def get_tac(self):
+    def get_ir(self):
         return self.ir
 
     def get_result(self):

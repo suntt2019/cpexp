@@ -20,8 +20,9 @@ compiles = [
     # LanguageCompiler(c4e, TACPGenerator).run(FileStream('test.c4e')),
     LanguageCompiler(c4e, X86Generator).run(FileStream('test.c4e')),
 ]
-v = 0
+v = 1
 c = compiles[0]
+# print('\n'.join(c.lex_tokens()))
 code = c.compile(merge_labels, rename_labels, verbose=v)
 print(code)
 # input()

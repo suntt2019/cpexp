@@ -94,6 +94,9 @@ factor
   | INT8                # Int8Factor
   | INT10               # Int10Factor
   | INT16               # Int16Factor
+  | REAL8               # Real8Factor
+  | REAL10              # Real10Factor
+  | REAL16              # Real16Factor
   ;
 
 
@@ -121,7 +124,7 @@ SEM: ';';
 LB: '{';  // Braces
 RB: '}';
 
-TYPE_: 'int' | 'float';
+TYPE_: 'long' | 'float';
 IDN: [a-zA-Z]([a-zA-Z]|[0-9])*(('_'|'.')([a-zA-Z]|[0-9])+)?;
 INT16: ('0x'|'0X')[0-9a-f]+;
 REAL16: INT16'.'[0-9a-f]+;
