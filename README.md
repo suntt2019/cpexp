@@ -54,12 +54,12 @@ CPExp: Compile Principle Experiment，即编译原理实验。
 
 以下为根目录下`build.py`脚本使用方法：
 ```
-usage: build.py [-h] [--language LANGUAGE] [--quite] [--force]
+usage: build.py [-h] [--language LANGUAGE] [--verbose] [--force]
 
 options:
   -h, --help            show this help message and exit
   --language LANGUAGE, -l LANGUAGE
-  --quite, -q
+  --verbose, -v
   --force, -f
 ```
 脚本语言默认为`exp`，可以先不指定语言运行（构建`exp`），随后让系统自动重新构建到正确的源语言。

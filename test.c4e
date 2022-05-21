@@ -1,16 +1,3 @@
-int a;
-float b;
-
-float add(int i, float f) {
-    return i + f;
-}
-
 int main() {
-    // With convert
-    a = add(b*2, a+1);
-    // Without convert
-    float a;
-    int b;
-    a = add(b, a);
     return 0;
 }

@@ -44,11 +44,23 @@ class Compile:
         self.generator = generator()
         self.result = None
 
-    def compile(self, *optimizers):
+    def compile(self, *optimizers, verbose=0):
+        if verbose > 0:
+            print('Compiling...')
+        if verbose > 1:
+            print('    Parsing(with lexing on the fly)...')
         self.parse()
+        if verbose > 1:
+            print('    Semantic analyzing...')
         self.semantic()
+        if verbose > 1:
+            print('    General optimizing...')
         self.optimize(*optimizers)
+        if verbose > 1:
+            print('    Generating...')
         self.generate()
+        if verbose > 0:
+            print('Compile finished.')
         return self.result
 
     def lex_tokens(self):

@@ -11,7 +11,7 @@ class Function:
         #   add self.definition to mark if function has been defined and where it's defined
 
     def __str__(self):
-        return f'{self.name}[() -> {self.return_type}]'
+        return self.name
 
     def use_memory(self, size):
         self.memory_used += size
