@@ -16,6 +16,7 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
         self.places = PlaceManager()
         self.functions = {}
         self.context = Context()
+        self.init_code = []
 
     def get_data(self, x):
         if type(x) == TerminalNodeImpl:
@@ -32,11 +33,11 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
     def new_temp(self, _type: DataType):
         return self.places.new_temp(_type)
 
-    def new_global(self, name: str, _type: DataType):
-        return self.places.add_global(name, _type)
+    def new_global(self, name: str, _type: DataType, initial=None):
+        return self.places.add_global(name, _type, initial)
 
-    def new_local(self, name: str, _type: DataType):
-        return self.context.add_local(name, _type)
+    def new_local(self, name: str, _type: DataType, initial=None):
+        return self.context.add_local(name, _type, initial)
 
     def get_variable(self, name: str):
         local = self.context[name]
@@ -53,7 +54,7 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
     # Structure: (memory, label, function) -> (symbol table, context)
     # For context free symbols, in the symbol table
     # For context related symbols, in the context
-    def new_function(self, name: str, return_type: DataType, param_types: list[tuple[DataType, str]]):
+    def new_function(self, name: str, return_type: DataType | None, param_types: list[tuple[DataType, str]]):
         if name in self.functions:
             raise Exception(f'Function "{name}" already exists.')
         ret = Function(name, return_type, param_types)
@@ -106,7 +107,8 @@ class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
     def analyze(self, ast):
         walker = ParseTreeWalker()
         walker.walk(self, ast)
-        return self.places.alloc() + [SectionStartInst('text')] + self.variable_attributes[ast].code
+        init = [FunctionStartInst(Function('init', None, [], internal=True))] + self.init_code + [ReturnInst()]
+        return self.places.alloc() + [SectionStartInst('text')] + init + self.variable_attributes[ast].code
 
 
 class VA:

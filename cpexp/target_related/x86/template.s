@@ -7,7 +7,7 @@ global    _start
     print_int_tmp: resb 10  ; int64 max 10 digits
 
     section .text
-_print_int:                 ; Function: print_int(int64 x)
+func_print_int:             ; Function: print_int(int64 x)
     push    rbp
     mov     rbp, rsp
 
@@ -39,7 +39,9 @@ print_int_loop:             ; do {
     ret
 ; PREFIX_END
     section .text
-_main:
+func_init:
+    ret
+func_main:
     mov     rax, 1234
     push    rax
     call    print_int
@@ -57,7 +59,8 @@ _start:
     mov     rdx, 7
     syscall
 
-    call    _main
+    call    _init
+    call    func_main
 
     ; System call exit(60): (rax, rdi) = (60, exit_code)
     mov     rdi, rax

@@ -11,7 +11,7 @@ class DataType:
     def __init__(self, name: str):
         self.name = name
         self._id, self.bits = self.types[name]
-        # For more complex type system, use POSet instead of id
+        # TODO: For more complex type system, use POSet instead of id
 
     def __str__(self):
         return self.name
@@ -27,16 +27,27 @@ class DataType:
 
 
 class Place:
-    def __init__(self, name: str, _type: DataType, initial: any = None):
+    def __init__(self, name: str, _type: DataType | None, initial: any = None):
         self.name = name
-        self.type = _type
+        self._type = _type
         self.initial = initial
+
+    @property
+    def type(self):
+        return self._type
 
     def __repr__(self):
         return f'[{self.name}]'
 
-    def alloc(self):
-        return DataInst(self)
+
+class VoidPlace(Place):
+    def __init__(self):
+        super().__init__('VOID_PLACE', None)
+
+    @property
+    def type(self):
+        # TODO: This assumes any access to the places need to get its type first
+        raise Exception("Void value not ignored as it should be")
 
 
 class Constant(Place):
@@ -48,12 +59,12 @@ class Constant(Place):
 
 
 class Local(Place):
-    def __init__(self, name: str, _type: DataType, address):
+    def __init__(self, name: str, _type: DataType, address, initial=None):
         self.address = address
-        super().__init__(name, _type)
+        super().__init__(name, _type, initial)
 
     def __str__(self):
-        return f'{self.name}[at {self.address}]'
+        return f'[rbp+{self.address}]'
 
 
 class PlaceManager:
@@ -66,10 +77,10 @@ class PlaceManager:
         self.temp.append(ret)
         return ret
 
-    def add_global(self, name: str, _type: DataType):
+    def add_global(self, name: str, _type: DataType, initial=None):
         if name in self.global_:
             raise Exception(f'Global variable "{name}" already exists.')
-        ret = Place(name, _type)
+        ret = Place(name, _type, initial)
         self.global_[name] = ret
         return ret
 
@@ -81,5 +92,15 @@ class PlaceManager:
             return self.global_[name]
 
     def alloc(self):
-        ret = [SectionStartInst('data')] + list(map(lambda x: x.alloc(), self.temp + list(self.global_.values())))
-        return ret
+        data_section = [SectionStartInst('data')]
+        bss_section = [SectionStartInst('bss')]
+        for var in self.temp + list(self.global_.values()):
+            if var.initial is None:
+                bss_section.append(BSSInst(var))
+            else:
+                # TODO: try to calculate initial expression during compile
+                if isinstance(var.initial, Constant):
+                    data_section.append(DataInst(var))
+                else:
+                    bss_section.append(BSSInst(var))
+        return data_section + bss_section

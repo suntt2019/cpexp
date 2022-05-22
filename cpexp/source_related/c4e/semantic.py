@@ -2,7 +2,7 @@ import operator
 from functools import reduce
 from itertools import zip_longest
 
-from cpexp.generic.memory import Constant
+from cpexp.generic.memory import Constant, VoidPlace
 from cpexp.ir.instructions import *
 from cpexp.generic.semantic import Semantic, parameterize_children, VA
 from cpexp.source_related.c4e.memory import C4eType
@@ -27,13 +27,17 @@ class C4eSemantic(Semantic):
         fd.code = []
 
     @parameterize_children
-    def exitFunctionPrototype(self, fp: VA, _type, _id, *param_list):
+    def exitFunctionPrototype(self, fp: VA, type_name, _id, *param_list):
         # Merge each two elements into a tuple in a list
         # Reference: https://segmentfault.com/q/1010000007881319
+        if type_name == 'void':
+            _type = None
+        else:
+            _type = C4eType(type_name)
         parameters = []
         for param_type, param_id in zip_longest(*([iter(param_list)] * 2)):
             parameters.append((C4eType(param_type), param_id))
-        fp['func'] = self.new_function(_id, C4eType(_type), parameters)
+        fp['func'] = self.new_function(_id, _type, parameters)
 
     @parameterize_children
     def enterFunctionBody(self, fb: VA, b: VA):
@@ -43,8 +47,8 @@ class C4eSemantic(Semantic):
     def exitFunctionBody(self, fb: VA, b: VA):
         func = fb['prototype']['func']
         fb.code = [FunctionStartInst(func)] \
-                 + b.code \
-                 + [FunctionEndInst(func)]
+                  + b.code \
+                  + [FunctionEndInst(func)]
         self.exit()
 
     @parameterize_children
@@ -78,13 +82,21 @@ class C4eSemantic(Semantic):
         s.code = e.code
 
     @parameterize_children
-    def exitDeclareStatement(self, s: VA, _type, _id):
-        if self.context.function is None:
-            self.new_global(_id, C4eType(_type))
-            s.code = []
+    def exitDeclare_statement(self, s: VA, _type, _id, e: VA = None):
+        if e is None:
+            initial = None
         else:
-            place = self.new_local(_id, C4eType(_type))
-            s.code = [AllocInst(place)]
+            initial = e.place
+        if self.context.function is None:
+            place = self.new_global(_id, C4eType(_type), initial)
+            s.code = []
+            if e is not None and len(e.code) > 0:
+                self.init_code += e.code + [AssignInst(place, e.place)]
+        else:
+            place = self.new_local(_id, C4eType(_type), initial)
+            s.code = e.code + [AllocInst(place)]  # TODO: remove AllocInst class since it's useless
+            if initial is not None:
+                s.code.append(AssignInst(place, e.place))
 
     @parameterize_children
     def enterIfStatement(self, s: VA, c: VA, s1: VA):
@@ -137,10 +149,14 @@ class C4eSemantic(Semantic):
             s.code += [LabelInst(s.next)]
 
     @parameterize_children
-    def exitReturnStatement(self, s: VA, e: VA):
+    def exitReturnValueStatement(self, s: VA, e: VA):
         func = self.context.function
         _e, code = self.convert_type(func.return_type, e.place)
         s.code = e.code + code + [ReturnInst(_e)]
+
+    @parameterize_children
+    def exitReturnVoidStatement(self, s: VA):
+        s.code = [ReturnInst()]
 
     @parameterize_children
     def enterBracketedStatement(self, s: VA, b: VA):
@@ -176,15 +192,13 @@ class C4eSemantic(Semantic):
     @parameterize_children
     def exitAddExpression(self, e: VA, e1: VA, t: VA):
         dst_type, code, _e1, _t = self.convert_types(e1.place, t.place)
-        place = self.new_temp(dst_type)
-        e.place = place
-        e.code = e1.code + t.code + code + [AddInst(place, _e1, _t)]
+        e.place = self.new_temp(dst_type)
+        e.code = e1.code + t.code + code + [AddInst(e.place, _e1, _t)]
 
     @parameterize_children
     def exitSubExpression(self, e: VA, e1: VA, t: VA):
-        place = self.new_temp(max(e1.place.type, t.place.type))
-        e.place = place
-        e.code = e1.code + t.code + [SubInst(place, e1.place, t.place)]
+        e.place = self.new_temp(max(e1.place.type, t.place.type))
+        e.code = e1.code + t.code + [SubInst(e.place, e1.place, t.place)]
 
     @parameterize_children
     def exitTermExpression(self, e: VA, t: VA):
@@ -199,25 +213,36 @@ class C4eSemantic(Semantic):
         func = self.get_function(_id, arg_types)
         param_types = list(map(lambda x: x[0], func.param_list))
         _arg_places, arg_conv_code = self.convert_type_list(arg_places, param_types)
-        s.place = self.new_temp(func.return_type)
+        if func.return_type is not None:
+            s.place = self.new_temp(func.return_type)
+        else:
+            s.place = VoidPlace()
         s.code = arg_code + arg_conv_code + [CallInst(s.place, func, _arg_places)]
 
     @parameterize_children
-    def exitFactorTerm(self, t: VA, f: VA):
-        t.place = f.place
-        t.code = f.code
+    def exitUnaryTerm(self, t: VA, u: VA):
+        t.place = u.place
+        t.code = u.code
 
     @parameterize_children
-    def exitMultipleTerm(self, t: VA, t1: VA, f: VA):
-        place = self.new_temp(max(t1.place.type, f.place.type))
-        t.place = place
-        t.code = t1.code + f.code + [MultipleInst(place, t1.place, f.place)]
+    def exitMultipleTerm(self, t: VA, t1: VA, u: VA):
+        t.place = self.new_temp(max(t1.place.type, u.place.type))
+        t.code = t1.code + u.code + [MultipleInst(t.place, t1.place, u.place)]
 
     @parameterize_children
-    def exitDivitionTerm(self, t: VA, t1: VA, f: VA):
-        place = self.new_temp(max(t1.place.type, f.place.type))
-        t.place = place
-        t.code = t1.code + f.code + [DivisionInst(place, t1.place, f.place)]
+    def exitDivitionTerm(self, t: VA, t1: VA, u: VA):
+        t.place = self.new_temp(max(t1.place.type, u.place.type))
+        t.code = t1.code + u.code + [DivisionInst(t.place, t1.place, u.place)]
+
+    @parameterize_children
+    def exitNegUnary(self, u: VA, f: VA):
+        u.place = self.new_temp(f.place.type)  # TODO: optimize the code, remove local variable 'place'
+        u.code = [SubInst(u.place, 0, f.place)]
+
+    @parameterize_children
+    def exitFactorUnary(self, u: VA, f: VA):
+        u.place = f.place
+        u.code = []
 
     @parameterize_children
     def exitBracketedFactor(self, f: VA, e: VA):

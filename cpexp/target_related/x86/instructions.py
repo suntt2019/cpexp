@@ -1,12 +1,29 @@
-from cpexp.generic.memory import Place, Constant
+from cpexp.generic.label import *
+from cpexp.generic.memory import *
 from cpexp.ir.generator import TargetInst
 
 
-def specify_size(operand: Place | str):
-    if isinstance(operand, Place) and not isinstance(operand, Constant):
+def gen_operand(operand: Place | str):
+    if type(operand) in [int, str]:
+        return str(operand)
+    elif isinstance(operand, Label):
+        return f'L{operand.id}'
+    elif isinstance(operand, Constant):
+        return f'{operand.name[1:]}'
+    elif isinstance(operand, Local):
         # TODO: choose size specifier by operand.type.bits
-        return f'qword {operand}'
-    return operand
+        return f'qword [rbp{operand.address:+d}]'
+    elif isinstance(operand, Place):
+        return f'qword [{operand.name}]'
+    raise Exception(f'Unsupported type {operand.__class__} operand {operand}')
+
+
+#
+# def gen_operand(operand: Place | str):
+#     if isinstance(operand, Place) and not isinstance(operand, Constant):
+#
+#         return f'qword {operand}'
+#     return str(operand)
 
 
 class X86(TargetInst):
@@ -23,14 +40,8 @@ class X86(TargetInst):
         if c == 0:
             cmd = self.NAME
         else:
-            cmd = f'{self.NAME.ljust(4)}\t{", ".join(map(str, self.operands))}'
+            cmd = f'{self.NAME.ljust(4)}\t{", ".join(map(gen_operand, self.operands))}'
         return f'\t{cmd}\n'
-
-
-class SpecifyFirstOperand(X86):
-    def __str__(self):
-        self.operands[0] = specify_size(self.operands[0])
-        return super().__str__()
 
 
 class MOV(X86):
@@ -48,12 +59,12 @@ class SUB(X86):
     OP_CNT = 2
 
 
-class IMUL(SpecifyFirstOperand):
+class IMUL(X86):
     NAME = 'imul'
     OP_CNT = 1
 
 
-class IDIV(SpecifyFirstOperand):
+class IDIV(X86):
     NAME = 'idiv'
     OP_CNT = 1
 
@@ -63,7 +74,7 @@ class XOR(X86):
     OP_CNT = 2
 
 
-class PUSH(SpecifyFirstOperand):
+class PUSH(X86):
     NAME = 'push'
     OP_CNT = 1
 
@@ -76,10 +87,6 @@ class POP(X86):
 class CALL(X86):
     NAME = 'call'
     OP_CNT = 1
-
-    def __str__(self):
-        self.operands[0] = f'_{str(self.operands[0])}'
-        return super().__str__()
 
 
 class RET(X86):

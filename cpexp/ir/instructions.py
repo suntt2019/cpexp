@@ -12,6 +12,11 @@ class DataInst(Instruction):
         self.place = place
 
 
+class BSSInst(Instruction):
+    def __init__(self, place):
+        self.place = place
+
+
 class FunctionStartInst(Instruction):
     def __init__(self, function):
         self.function = function
@@ -38,7 +43,7 @@ class AssignInst(Instruction):
 
 
 class ReturnInst(Instruction):
-    def __init__(self, value):
+    def __init__(self, value=None):
         self.value = value
 
 

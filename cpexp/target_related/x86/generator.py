@@ -2,7 +2,7 @@ import os.path
 
 from cpexp.base import working_dir
 from cpexp.ir.generator import *
-from cpexp.target_related.x86.instruction import *
+from cpexp.target_related.x86.instructions import *
 
 template = None
 
@@ -70,23 +70,26 @@ class X86Generator(Generator):
 
     @gen.register
     def _(self, inst: DataInst):
-        initial = inst.place.initial
-        if initial is None:
-            initial = 0
-            # TODO: use BSS segment instead of this
         return [
-            f'\t{inst.place.name}: d{bits_to_type(inst.place.type.bits)} {initial}\n'
+            f'\t{inst.place.name}: d{bits_to_type(inst.place.type.bits)} {inst.place.initial}\n'
+        ]
+
+    @gen.register
+    def _(self, inst: BSSInst):
+        return [
+            f'\t{inst.place.name}: res{bits_to_type(inst.place.type.bits)} 1\n'
         ]
 
     @gen.register
     def _(self, inst: FunctionStartInst):
+        alloc = []
+        if inst.function.local_size > 0:
+            alloc = [SUB(rsp, inst.function.local_size)]
         return [
-            f'\n_{inst.function}:\n',
-            PUSH('rbp'),
-            MOV('rbp', 'rsp'),
-            f'\t; Alloc local variable\n',  # TODO: local variables
-            f'\t; Store callee-saved registers\n'
-        ]
+            f'\n{inst.function.name}:\n',
+            PUSH(rbp),
+            MOV(rbp, rsp)
+        ] + alloc
 
     @gen.register
     def _(self, inst: FunctionEndInst):
@@ -108,32 +111,30 @@ class X86Generator(Generator):
 
     @gen.register
     def _(self, inst: ReturnInst):
+        if inst.value is None:
+            assign = []
+        else:
+            assign = [MOV(rax, inst.value)]
         return [
-            f'\t; Recover callee-saved registers\n',
-            MOV('rsp', 'rbp'),
-            POP('rbp'),
-            MOV(rax, inst.value),
-            RET()
-        ]
+                   MOV('rsp', 'rbp'),
+                   POP('rbp'),
+               ] + assign + [
+                   RET()
+               ]
 
     @gen.register
     def _(self, inst: CallInst):
         push_args = []
         for arg in inst.arguments:
             push_args.append(PUSH(arg))
-        return push_args + [
-            f'\t; Store caller-saved registers\n',
-            CALL(inst.function.name),
-            MOV(inst.place, rax),
-            f'\t; Recover caller-saved registers\n',
-            ADD('rsp', inst.function.param_size)
-        ]
+        assign = []
+        if not isinstance(inst.place, VoidPlace):
+            assign = [MOV(inst.place, rax)]
+        return push_args + [CALL(inst.function.name)] + assign + [ADD('rsp', inst.function.param_size)]
 
     @gen.register
     def _(self, inst: AllocInst):
-        return [
-            f'\t[Alloc on stack {inst.local.name}({inst.local.type.bits}) = {inst.local.initial} at {inst.local.address}]\n'
-        ]
+        return []
 
     @gen.register
     def _(self, inst: TwoOperandAssignInst):
@@ -179,9 +180,9 @@ class X86Generator(Generator):
         if type_name not in instructions[op]:
             raise Exception(f'Unsupported type {type_name} for operator {op}')
         return [
-            MOV(rax, inst.operand1),
-            CMP(rax, inst.operand2),
-        ] + instructions[op][type_name]
+                   MOV(rax, inst.operand1),
+                   CMP(rax, inst.operand2),
+               ] + instructions[op][type_name]
 
     @gen.register
     def _(self, inst: GotoInst):

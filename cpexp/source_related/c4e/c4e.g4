@@ -4,7 +4,7 @@ program
   : declare_block function_definition*
   ;
 
-declare_block
+declare_block   // TODO: maybe these elements could be mixed with function definitions?
   : (declare_statement|function_declaration|asm_statement)*  # DeclareBlock
   ;
 
@@ -17,7 +17,7 @@ function_definition
   ;
 
 function_prototype
-  : TYPE_ IDN LP ((TYPE_ IDN COMMA)* TYPE_ IDN)? RP     # FunctionPrototype
+  : (VOID|TYPE_) IDN LP ((TYPE_ IDN COMMA)* TYPE_ IDN)? RP     # FunctionPrototype
   ;
 
 function_body
@@ -42,7 +42,8 @@ non_declare_statement
   ;
 
 declare_statement
-  : TYPE_ IDN SEM       # DeclareStatement
+  : TYPE_ IDN SEM
+  | TYPE_ IDN ASSIGN expression SEM
   ;
 
 value_statement
@@ -58,7 +59,8 @@ control_flow_statement
   ;
 
 return_statement
-  : RET expression SEM      # ReturnStatement
+  : RET expression SEM      # ReturnValueStatement
+  | RET SEM                 # ReturnVoidStatement
   ;
 
 combined_statement
@@ -77,15 +79,20 @@ condition
 
 expression
   : expression ADD term                             # AddExpression
-  | expression SUB term                             # SubExpression
+  | expression NEG term                             # SubExpression
   | term                                            # TermExpression
   | IDN LP ((expression COMMA)* expression)? RP     # CallExpression
   ;
 
 term
-  : factor              # FactorTerm
-  | term MUL factor     # MultipleTerm
-  | term DIV factor     # DivitionTerm
+  : unary              # UnaryTerm
+  | term MUL unary     # MultipleTerm
+  | term DIV unary     # DivitionTerm
+  ;
+
+unary
+  : NEG factor          # NegUnary
+  | factor              # FactorUnary
   ;
 
 factor
@@ -110,7 +117,7 @@ ASM: 'asm';
 
 
 ADD: '+';
-SUB: '-';
+NEG: '-';
 MUL: '*';
 DIV: '/';
 LT:  '<';
@@ -123,6 +130,7 @@ COMMA: ',';
 SEM: ';';
 LB: '{';  // Braces
 RB: '}';
+VOID: 'void';
 
 TYPE_: 'long' | 'float';
 IDN: [a-zA-Z]([a-zA-Z]|[0-9])*(('_'|'.')([a-zA-Z]|[0-9])+)?;
