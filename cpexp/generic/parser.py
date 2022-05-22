@@ -5,7 +5,7 @@ import yaml
 from antlr4 import ParserRuleContext, TokenStream
 from antlr4.tree.Tree import ParseTree, TerminalNodeImpl
 
-import cpexp.antlr.CPExpParser
+from cpexp.antlr.CPExpParser import CPExpParser
 
 
 class ASTViewer:
@@ -35,10 +35,10 @@ class ASTViewer:
 
     def terminal(self, term: TerminalNodeImpl):
         token = term.getSymbol()
-        return cpexp.antlr.CPExpParser.CPExpParser.symbolicNames[token.type], term.getText()
+        return CPExpParser.symbolicNames[token.type], term.getText()
 
 
-class CPEParser(cpexp.antlr.CPExpParser.CPExpParser):
+class CPEParser(CPExpParser):
     START = 's'
 
     def parse(self):

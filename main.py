@@ -1,7 +1,5 @@
 import os.path
 
-import cpexp.source_related.exp
-import cpexp.source_related.c4e
 from cpexp.base import working_dir
 from cpexp.compile import *
 from cpexp.external.assemble import assemble

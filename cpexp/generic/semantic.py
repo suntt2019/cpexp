@@ -1,13 +1,13 @@
 from antlr4.tree.Tree import TerminalNodeImpl, ParseTreeWalker
 
-import cpexp.antlr.CPExpListener
+from cpexp.antlr.CPExpListener import CPExpListener
 from cpexp.generic.context import Context
 from cpexp.generic.function import Function
 from cpexp.generic.label import *
 from cpexp.generic.memory import PlaceManager, DataType, Place
 
 
-class Semantic(cpexp.antlr.CPExpListener.CPExpListener):
+class Semantic(CPExpListener):
 
     def __init__(self, token_value: list):
         self.token_value = token_value

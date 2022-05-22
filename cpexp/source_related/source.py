@@ -1,4 +1,3 @@
-import cpexp.antlr.CPExpParser
 from cpexp.generic.lexer import CPELexer
 from cpexp.generic.parser import CPEParser
 from cpexp.generic.semantic import Semantic

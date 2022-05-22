@@ -33,14 +33,6 @@ def build(language: str, verbose=0):
     os.system(cmd)
     if verbose > 1:
         print(f'    Reload packages.')
-    import cpexp.antlr.CPExpParser
-    import cpexp.antlr.CPExpLexer
-    import cpexp.antlr.CPExpListener
-    importlib.reload(cpexp.antlr.CPExpParser)
-    importlib.reload(cpexp.antlr.CPExpLexer)
-    importlib.reload(cpexp.antlr.CPExpListener)
-    # TODO: remove reloading since run the program again is needed
-    # Maybe also change "import X.Y" to "form X import Y"
     if verbose > 1:
         print('Build finished.')
 

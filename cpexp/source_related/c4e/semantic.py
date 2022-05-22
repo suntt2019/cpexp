@@ -11,8 +11,8 @@ from cpexp.source_related.c4e.memory import C4eType
 class C4eSemantic(Semantic):
 
     @parameterize_children
-    def exitProgram(self, p: VA, b: VA, *f: VA):
-        p.code = b.code + reduce(lambda a, b: a + b.code, f, [])
+    def exitProgram(self, p: VA, *pp: VA):  # pp: program part
+        p.code = reduce(lambda a, b: a + b.code, pp, [])
 
     @parameterize_children
     def enterFunctionDefinition(self, f: VA, fp: VA, fb: VA):
@@ -50,10 +50,6 @@ class C4eSemantic(Semantic):
                   + b.code \
                   + [FunctionEndInst(func)]
         self.exit()
-
-    @parameterize_children
-    def exitDeclareBlock(self, b: VA, *s: VA):
-        b.code = reduce(lambda a, b: a + b.code, s, [])
 
     @parameterize_children
     def exitStatementsBlock(self, p: VA, *s: VA):
@@ -236,7 +232,7 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitNegUnary(self, u: VA, f: VA):
-        u.place = self.new_temp(f.place.type)  # TODO: optimize the code, remove local variable 'place'
+        u.place = self.new_temp(f.place.type)
         u.code = [SubInst(u.place, 0, f.place)]
 
     @parameterize_children

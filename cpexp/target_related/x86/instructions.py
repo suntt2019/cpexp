@@ -35,7 +35,7 @@ class X86(TargetInst):
 
     def __str__(self):
         c = len(self.operands)
-        if c != self.OP_CNT:  # TODO: for development, remove this to improve performance
+        if c != self.OP_CNT:  # TODO: this line is written for development, remove this to improve performance
             raise Exception(f'{c} operands ({self.operands}) are not supported for instruction {self.NAME}')
         if c == 0:
             cmd = self.NAME

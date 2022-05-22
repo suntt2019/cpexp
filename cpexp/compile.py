@@ -3,8 +3,6 @@ from io import StringIO
 
 from antlr4 import *
 
-# Use "import X.Y" instead of "from X import Y" to make reloading available
-import cpexp.antlr.CPExpParser
 from cpexp.antlr.build import update
 from cpexp.generic.lexer import get_tokens, CPELexer
 from cpexp.generic.parser import CPEParser

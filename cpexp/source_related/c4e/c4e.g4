@@ -1,11 +1,7 @@
 grammar c4e;
 
 program
-  : declare_block function_definition*
-  ;
-
-declare_block   // TODO: maybe these elements could be mixed with function definitions?
-  : (declare_statement|function_declaration|asm_statement)*  # DeclareBlock
+  : (declare_statement|function_declaration|asm_statement|function_definition)*
   ;
 
 function_declaration
