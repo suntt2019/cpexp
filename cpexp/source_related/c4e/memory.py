@@ -3,6 +3,7 @@ from cpexp.generic.memory import DataType
 
 class C4eType(DataType):
     types = {
-        'long': (1, 64),
-        'float': (2, 64)
+        'int': (1, 32),
+        'long': (2, 64),
+        'float': (11, 64)
     }

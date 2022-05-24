@@ -1,11 +1,19 @@
 long print_int(long x);
 
-long a;
+//long a;
 
-long main() {
-    a = 1;
-    long b = 3;
-    b = a+b;
-    print_int(b);
+//int add(int a, int b) {
+//    print_int(a);
+//    return a + b;
+//}
+
+int main() {
+//    a = 4;
+//    print_int(a);
+//    int b = 3;
+//    b = add(a, b);
+//    print_int(b);
+    long c = 1;
+    print_int(c);
     return 0;
 }

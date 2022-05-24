@@ -128,7 +128,7 @@ LB: '{';  // Braces
 RB: '}';
 VOID: 'void';
 
-TYPE_: 'long' | 'float';
+TYPE_: 'int' | 'long' | 'float';
 IDN: [a-zA-Z]([a-zA-Z]|[0-9])*(('_'|'.')([a-zA-Z]|[0-9])+)?;
 INT16: ('0x'|'0X')[0-9a-f]+;
 REAL16: INT16'.'[0-9a-f]+;

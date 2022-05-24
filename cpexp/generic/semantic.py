@@ -107,7 +107,8 @@ class Semantic(CPExpListener):
     def analyze(self, ast):
         walker = ParseTreeWalker()
         walker.walk(self, ast)
-        init = [FunctionStartInst(Function('init', None, [], internal=True))] + self.init_code + [ReturnInst()]
+        init_func = Function('init', None, [], internal=True)
+        init = [FunctionStartInst(init_func)] + self.init_code + [ReturnInst()] + [FunctionEndInst(init_func)]
         return self.places.alloc() + [SectionStartInst('text')] + init + self.variable_attributes[ast].code
 
 

@@ -1,36 +1,37 @@
 from cpexp.generic.label import *
 from cpexp.generic.memory import *
 from cpexp.ir.generator import TargetInst
+from cpexp.target_related.x86.base import bits_to_data_size
+from cpexp.target_related.x86.register import Register
 
 
-def gen_operand(operand: Place | str):
+def gen_operand(operand: Place | Register | str, redundancy=False):
     if type(operand) in [int, str]:
+        print(operand)
         return str(operand)
     elif isinstance(operand, Label):
         return f'L{operand.id}'
+    elif isinstance(operand, Register):
+        return operand.name
     elif isinstance(operand, Constant):
         return f'{operand.name[1:]}'
-    elif isinstance(operand, Local):
-        # TODO: choose size specifier by operand.type.bits
-        return f'qword [rbp{operand.address:+d}]'
     elif isinstance(operand, Place):
-        return f'qword [{operand.name}]'
+        if redundancy:
+            specifier = 'q'
+        else:
+            specifier = f'{bits_to_data_size(operand.type.bits)}'
+        if isinstance(operand, Local):
+            return f'{specifier}word [rbp{operand.address:+d}]'
+        return f'{specifier}word [{operand.name}]'
     raise Exception(f'Unsupported type {operand.__class__} operand {operand}')
-
-
-#
-# def gen_operand(operand: Place | str):
-#     if isinstance(operand, Place) and not isinstance(operand, Constant):
-#
-#         return f'qword {operand}'
-#     return str(operand)
 
 
 class X86(TargetInst):
     NAME = 'UNKNOWN'
     OP_CNT = -1
+    REDUNDANCY = False
 
-    def __init__(self, *operands: str):
+    def __init__(self, *operands):
         self.operands = list(operands)
 
     def __str__(self):
@@ -40,7 +41,10 @@ class X86(TargetInst):
         if c == 0:
             cmd = self.NAME
         else:
-            cmd = f'{self.NAME.ljust(4)}\t{", ".join(map(gen_operand, self.operands))}'
+            ret = []
+            for op in self.operands:
+                ret.append(gen_operand(op, redundancy=self.REDUNDANCY))
+            cmd = f'{self.NAME.ljust(4)}\t{", ".join(ret)}'
         return f'\t{cmd}\n'
 
 
@@ -77,11 +81,13 @@ class XOR(X86):
 class PUSH(X86):
     NAME = 'push'
     OP_CNT = 1
+    REDUNDANCY = True
 
 
 class POP(X86):
     NAME = 'pop'
     OP_CNT = 1
+    REDUNDANCY = True
 
 
 class CALL(X86):
@@ -115,5 +121,10 @@ class JL(X86):
 
 
 class JE(X86):
-    NAME = 'jE'
+    NAME = 'je'
     OP_CNT = 1
+
+
+class CDQ(X86):
+    NAME = 'cdq'
+    OP_CNT = 0

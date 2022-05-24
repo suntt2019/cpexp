@@ -12,10 +12,8 @@ class Context:
         self._function = func
         self.locals = {}
         if func is not None:
-            address = 8  # The original rbp is set in the first quad-word
-            for _type, _id in func.param_list:
-                address += math.ceil(_type.bits/8)
-                self.add_local_variable(_id, _type, address)
+            for param in func.param_list:
+                self.add_local_variable(param)
 
     def enter(self, func=None):
         inner = Context(self, func)
@@ -36,13 +34,13 @@ class Context:
 
     def add_local(self, name: str, _type: DataType, initial=None):
         address = -self.function.use_memory(math.ceil(_type.bits / 8))
-        return self.add_local_variable(name, _type, address, initial)
-
-    def add_local_variable(self, name: str, _type: DataType, address: int, initial=None):
-        if name in self.locals:
-            raise Exception(f'Local variable {name} already exists.')
         local = Local(name, _type, address, initial)
-        self.locals[name] = local
+        return self.add_local_variable(local)
+
+    def add_local_variable(self, local: Local):
+        if local.name in self.locals:
+            raise Exception(f'Local variable {local.name} already exists.')
+        self.locals[local.name] = local
         return local
 
     def __getitem__(self, name: str):
