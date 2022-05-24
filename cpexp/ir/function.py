@@ -1,10 +1,11 @@
 import math
 
-from cpexp.generic.memory import DataType
+from cpexp.ir.base import InstructionContent
+from cpexp.ir.memory import Type
 
 
-class Function:
-    def __init__(self, name: str, return_type: DataType | None, param_list: list[tuple[DataType, str]], internal=False):
+class Function(InstructionContent):
+    def __init__(self, name: str, return_type: Type | None, param_list: list[tuple[Type, str]], internal=False):
         self._name = name
         self.return_type = return_type
         self.local_size = 0

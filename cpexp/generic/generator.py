@@ -1,6 +1,6 @@
 from functools import singledispatch, update_wrapper
 
-from cpexp.ir.instructions import *
+from cpexp.ir.instruction import *
 
 
 # Awesome decorator from stackoverflow.

@@ -1,4 +1,5 @@
-from cpexp.ir.generator import *
+from cpexp.generic.generator import *
+from cpexp.ir.base import Instruction
 
 
 class TACGenerator(Generator):

@@ -1,5 +1,5 @@
-from cpexp.generic.memory import DataType
-from cpexp.ir.instructions import AssignInst, LabelInst, GotoInst, IfGotoInst, AddInst, SubInst, MultipleInst, \
+from cpexp.ir.memory import Type
+from cpexp.ir.instruction import AssignInst, LabelInst, GotoInst, IfGotoInst, AddInst, SubInst, MultipleInst, \
     DivisionInst
 from cpexp.generic.semantic import Semantic, parameterize_children, VA
 
@@ -7,7 +7,7 @@ from cpexp.generic.semantic import Semantic, parameterize_children, VA
 class ExpSemantic(Semantic):
 
     def new_temp(self):
-        return self.places.new_temp(DataType('_'))
+        return self.places.new_temp(Type('_'))
 
     @parameterize_children
     def exitSingleProgram(self, p: VA, l: VA):

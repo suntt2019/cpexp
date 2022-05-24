@@ -1,9 +1,8 @@
-import operator
 from functools import reduce
 from itertools import zip_longest
 
-from cpexp.generic.memory import Constant, VoidPlace
-from cpexp.ir.instructions import *
+from cpexp.ir.memory import Constant, VoidPlace
+from cpexp.ir.instruction import *
 from cpexp.generic.semantic import Semantic, parameterize_children, VA
 from cpexp.source_related.c4e.memory import C4eType
 

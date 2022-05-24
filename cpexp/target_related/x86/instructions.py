@@ -1,6 +1,6 @@
-from cpexp.generic.label import *
-from cpexp.generic.memory import *
-from cpexp.ir.generator import TargetInst
+from cpexp.ir.label import *
+from cpexp.ir.memory import *
+from cpexp.generic.generator import TargetInst
 
 
 def gen_operand(operand: Place | str):

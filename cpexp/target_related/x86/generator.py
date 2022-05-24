@@ -1,7 +1,7 @@
 import os.path
 
 from cpexp.base import working_dir
-from cpexp.ir.generator import *
+from cpexp.generic.generator import *
 from cpexp.target_related.x86.instructions import *
 
 template = None

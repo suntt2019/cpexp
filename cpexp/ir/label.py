@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from cpexp.ir.instructions import *
+from cpexp.ir.base import InstructionContent
+from cpexp.ir.instruction import *
 
 
 # TODO: Label table
 
-class Label:
+class Label(InstructionContent):
     def __init__(self, _id: int):
         self.id = _id
         self.usage = []

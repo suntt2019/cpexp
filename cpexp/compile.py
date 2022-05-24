@@ -1,12 +1,11 @@
 import sys
-from io import StringIO
 
 from antlr4 import *
 
 from cpexp.antlr.build import update
 from cpexp.generic.lexer import get_tokens, CPELexer
 from cpexp.generic.parser import CPEParser
-from cpexp.ir.generator import Generator
+from cpexp.generic.generator import Generator
 from cpexp.generic.semantic import *
 from cpexp.source_related.source import SourceLanguage
 

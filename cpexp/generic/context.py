@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import math
 
-from cpexp.generic.function import Function
-from cpexp.generic.memory import DataType, Local
+from cpexp.ir.function import Function
+from cpexp.ir.memory import Type, Local
 
 
 class Context:
@@ -34,11 +34,11 @@ class Context:
         else:
             return self._function
 
-    def add_local(self, name: str, _type: DataType, initial=None):
+    def add_local(self, name: str, _type: Type, initial=None):
         address = -self.function.use_memory(math.ceil(_type.bits / 8))
         return self.add_local_variable(name, _type, address, initial)
 
-    def add_local_variable(self, name: str, _type: DataType, address: int, initial=None):
+    def add_local_variable(self, name: str, _type: Type, address: int, initial=None):
         if name in self.locals:
             raise Exception(f'Local variable {name} already exists.')
         local = Local(name, _type, address, initial)

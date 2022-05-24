@@ -1,4 +1,4 @@
-from cpexp.ir.instructions import *
+from cpexp.ir.instruction import *
 
 
 def merge_labels(ir: list[Instruction]):
