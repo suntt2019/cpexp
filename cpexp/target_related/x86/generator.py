@@ -2,22 +2,12 @@ import os.path
 
 from cpexp.base import working_dir
 from cpexp.generic.generator import *
-from cpexp.target_related.x86.instructions import *
+from cpexp.source_related.c4e.memory import C4eType
+from cpexp.target_related.x86.instruction import *
+from cpexp.target_related.x86.instruction import _TEXT
+from cpexp.target_related.x86.register import *
 
 template = None
-
-# Register variables:
-#   * simplify coding
-#   * avoid typo
-rax = 'rax'
-rbx = 'rbx'
-rcx = 'rcx'
-rdx = 'rdx'
-rsi = 'rsi'
-rdi = 'rdi'
-rsp = 'rsp'
-rbp = 'rbp'
-
 
 # TODO: use different register for different size
 # TODO: Alloc registers
@@ -53,40 +43,41 @@ def bits_to_type(bits: int):
 
 # Generate intel syntax for nasm
 class X86Generator(Generator):
-    def generate(self, tac: list[Instruction]) -> str:
+    def generate(self, ir: list[Instruction]) -> str:
         prefix, suffix = get_template()
-        generated = ''.join(map(lambda x: ''.join(map(str, self.gen(x))), tac))
-        return prefix + generated + suffix
+        generated = sum(map(self.gen, ir), [])
+        return prefix + self.tr_to_str(generated) + suffix
 
     @meth_dispatch
-    def gen(self, inst) -> list:
-        raise Exception(f'Unable to generate from type {inst.__class__.__name__}')
+    def gen(self, x) -> list:
+        raise Exception(f'Unable to generate from type {x.__class__.__name__} object {x}')
 
     @gen.register
     def _(self, inst: SectionStartInst):
         return [
-            f'\n\tsection .{inst.name}\n'
+            _TEXT(f'\n\tsection .{inst.name}\n')
         ]
 
     @gen.register
     def _(self, inst: DataInst):
         return [
-            f'\t{inst.place.name}: d{bits_to_type(inst.place.type.bits)} {inst.place.initial}\n'
+            _TEXT(f'\t{inst.place.name}: d{bits_to_type(inst.place.type.bits)} {inst.place.initial}\n')
         ]
 
     @gen.register
     def _(self, inst: BSSInst):
         return [
-            f'\t{inst.place.name}: res{bits_to_type(inst.place.type.bits)} 1\n'
+            _TEXT(f'\t{inst.place.name}: res{bits_to_type(inst.place.type.bits)} 1\n')
         ]
 
     @gen.register
     def _(self, inst: FunctionStartInst):
         alloc = []
         if inst.function.local_size > 0:
-            alloc = [SUB(rsp, inst.function.local_size)]
+            # TODO: Add X86Type which is almost same with C4eType, then add conversion between them
+            alloc = [SUB(rsp, Constant(C4eType('long'), inst.function.local_size))]
         return [
-            f'\n{inst.function.name}:\n',
+            _TEXT(f'\n{inst.function.name}:\n'),
             PUSH(rbp),
             MOV(rbp, rsp)
         ] + alloc
@@ -98,7 +89,7 @@ class X86Generator(Generator):
     @gen.register
     def _(self, inst: ConvertInst):
         return [
-            f'\t; {inst.dst} := {inst.src_type}_to_{inst.dst_type}({inst.src})\n'
+            _TEXT(f'\t; {inst.dst} := {inst.src_type}_to_{inst.dst_type}({inst.src})\n')
             # TODO: add float computing
         ]
 
@@ -116,8 +107,8 @@ class X86Generator(Generator):
         else:
             assign = [MOV(rax, inst.value)]
         return [
-                   MOV('rsp', 'rbp'),
-                   POP('rbp'),
+                   MOV(rsp, rbp),
+                   POP(rbp),
                ] + assign + [
                    RET()
                ]
@@ -130,11 +121,7 @@ class X86Generator(Generator):
         assign = []
         if not isinstance(inst.place, VoidPlace):
             assign = [MOV(inst.place, rax)]
-        return push_args + [CALL(inst.function.name)] + assign + [ADD('rsp', inst.function.param_size)]
-
-    @gen.register
-    def _(self, inst: AllocInst):
-        return []
+        return push_args + [CALL(inst.function)] + assign + [ADD(rsp, Constant(C4eType('long'), inst.function.param_size))]
 
     @gen.register
     def _(self, inst: TwoOperandAssignInst):
@@ -190,8 +177,28 @@ class X86Generator(Generator):
 
     @gen.register
     def _(self, inst: LabelInst):
-        return [f'{inst.label}:']
+        return [_TEXT(f'{inst.label.name}:')]
 
     @gen.register
     def _(self, inst: AsmInst):
-        return [f'{inst.code}\n']
+        return [_TEXT(f'{inst.code}\n')]
+
+    @gen.register
+    def _(self, content: Label):
+        return content.name
+
+    @gen.register
+    def _(self, content: Constant):
+        return content.name
+
+    @gen.register
+    def _(self, content: Local):
+        return f'qword [rbp{content.address:+d}]'
+
+    @gen.register
+    def _(self, content: Place):
+        return f'qword [{content.name}]'
+
+    @gen.register
+    def _(self, content: Function):
+        return content.name

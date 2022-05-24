@@ -56,11 +56,6 @@ class CallInst(Instruction):
         self.arguments = arguments  # type: list[Place]
 
 
-class AllocInst(Instruction):
-    def __init__(self, local: Local):
-        self.local = local  # type: Local
-
-
 class TwoOperandAssignInst(Instruction):
     OP = 'UNKNOWN'
 

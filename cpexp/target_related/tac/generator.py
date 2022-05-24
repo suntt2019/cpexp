@@ -3,8 +3,8 @@ from cpexp.ir.base import Instruction
 
 
 class TACGenerator(Generator):
-    def generate(self, tac: list[Instruction]) -> str:
-        return ''.join(map(self.gen, tac))
+    def generate(self, ir: list[Instruction]) -> str:
+        return ''.join(map(self.gen, ir))
     
     @meth_dispatch
     def gen(self, inst):

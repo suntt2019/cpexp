@@ -13,12 +13,6 @@ class Type(InstructionContent):
         self._id, self.bits = self.types[name]
         # TODO: For more complex type system, use POSet instead of id
 
-    def __str__(self):
-        return self.name
-
-    def __repr__(self):
-        return str(self)
-
     def __lt__(self, other: Type):
         return self._id < other._id
 
@@ -36,9 +30,6 @@ class Place(InstructionContent):
     def type(self):
         return self._type
 
-    def __repr__(self):
-        return f'[{self.name}]'
-
 
 class VoidPlace(Place):
     def __init__(self):
@@ -52,18 +43,10 @@ class VoidPlace(Place):
 
 class Constant(Place):
     def __init__(self, _type: Type, value):
-        super().__init__(f'_{value}', _type)
-
-    def __str__(self):
-        return self.name[1:]
+        super().__init__(f'{value}', _type)
 
 
 class Local(Place):
     def __init__(self, name: str, _type: Type, address, initial=None):
         self.address = address
         super().__init__(name, _type, initial)
-
-    def __str__(self):
-        return f'[rbp+{self.address}]'
-
-

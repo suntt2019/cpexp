@@ -3,8 +3,8 @@ from cpexp.ir.base import Instruction
 
 
 class TACPGenerator(Generator):
-    def generate(self, tac: list[Instruction]) -> str:
-        return ''.join(map(self.gen, tac))
+    def generate(self, ir: list[Instruction]) -> str:
+        return ''.join(map(self.gen, ir))
 
     @meth_dispatch
     def gen(self, inst):
@@ -45,10 +45,6 @@ class TACPGenerator(Generator):
                f'\t{inst.place} := {inst.function.name}()\n' \
                f'\t[Recover caller-saved registers]\n' \
                f'\t[Dealloc arguments from stack(add ESP)]\n'
-
-    @gen.register
-    def _(self, inst: AllocInst):
-        return f'\t[Alloc on stack {inst.local.name}({inst.local.type.bits}) = {inst.local.initial} at {inst.local.address}]\n'
 
     @gen.register
     def _(self, inst: TwoOperandAssignInst):

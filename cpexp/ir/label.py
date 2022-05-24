@@ -7,8 +7,8 @@ from cpexp.ir.instruction import *
 # TODO: Label table
 
 class Label(InstructionContent):
-    def __init__(self, _id: int):
-        self.id = _id
+    def __init__(self, name: str):
+        self.name = name
         self.usage = []
 
     def use(self, inst: WithLabelInst):
@@ -19,9 +19,3 @@ class Label(InstructionContent):
         for inst in other.usage:
             inst.set_label(self)
         del other
-
-    def set_id(self, _id):
-        self.id = _id
-
-    def __repr__(self):
-        return f'L{self.id}'

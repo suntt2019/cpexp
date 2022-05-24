@@ -30,7 +30,7 @@ class Semantic(CPExpListener):
             return self.variable_attributes.get(x)
 
     def new_label(self):
-        ret = Label(len(self.labels))
+        ret = Label(f'L{len(self.labels)}')
         self.labels.append(ret)
         return ret
 

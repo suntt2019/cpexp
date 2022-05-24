@@ -23,5 +23,5 @@ def rename_labels(ir: list[Instruction]):
         if hasattr(code, 'label'):
             s.add(code.label)
     for i, label in enumerate(s):
-        label.set_id(i)
+        label.name = f'L{i}'
     return ir

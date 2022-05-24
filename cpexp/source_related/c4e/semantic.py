@@ -89,7 +89,7 @@ class C4eSemantic(Semantic):
                 self.init_code += e.code + [AssignInst(place, e.place)]
         else:
             place = self.new_local(_id, C4eType(_type), initial)
-            s.code = e.code + [AllocInst(place)]  # TODO: remove AllocInst class since it's useless
+            s.code = e.code
             if initial is not None:
                 s.code.append(AssignInst(place, e.place))
 
