@@ -7,7 +7,7 @@ from cpexp.generic.semantic import Semantic, parameterize_children, VA
 class ExpSemantic(Semantic):
 
     def new_temp(self):
-        return self.places.new_temp(Type('_'))
+        return self.new_temp(Type('_'))
 
     @parameterize_children
     def exitSingleProgram(self, p: VA, l: VA):

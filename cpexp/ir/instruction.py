@@ -31,9 +31,7 @@ class FunctionEndInst(Instruction):
 
 class ConvertInst(Instruction):
     # May refactor to subclasses for different types, eg: between integers, itr, rti...
-    def __init__(self, src_type, dst_type, src: Place, dst: Place):
-        self.src_type = src_type  # TODO: remove these
-        self.dst_type = dst_type
+    def __init__(self, src: Place, dst: Place):
         self.src = src  # type: Place
         self.dst = dst  # type: Place
 

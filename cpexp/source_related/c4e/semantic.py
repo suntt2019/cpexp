@@ -187,13 +187,22 @@ class C4eSemantic(Semantic):
     @parameterize_children
     def exitAddExpression(self, e: VA, e1: VA, t: VA):
         dst_type, code, _e1, _t = self.convert_types(e1.place, t.place)
-        e.place = self.new_temp(dst_type)
-        e.code = e1.code + t.code + code + [AddInst(e.place, _e1, _t)]
+        e.place = self.new_temp(dst_type, e1.place, t.place)
+        e.code = e1.code + t.code + code
+        if e.place is None:
+            e.place = Constant(dst_type, e1.place.value + t.place.value)
+        else:
+            e.code += [AddInst(e.place, _e1, _t)]
 
     @parameterize_children
     def exitSubExpression(self, e: VA, e1: VA, t: VA):
-        e.place = self.new_temp(max(e1.place.type, t.place.type))
-        e.code = e1.code + t.code + [SubInst(e.place, e1.place, t.place)]
+        dst_type, code, _e1, _t = self.convert_types(e1.place, t.place)
+        e.place = self.new_temp(dst_type, e1.place, t.place)
+        e.code = e1.code + t.code + code
+        if e.place is None:
+            e.place = Constant(dst_type, e1.place.value - t.place.value)
+        else:
+            e.code += [SubInst(e.place, _e1, _t)]
 
     @parameterize_children
     def exitTermExpression(self, e: VA, t: VA):
@@ -221,18 +230,32 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitMultipleTerm(self, t: VA, t1: VA, u: VA):
-        t.place = self.new_temp(max(t1.place.type, u.place.type))
-        t.code = t1.code + u.code + [MultipleInst(t.place, t1.place, u.place)]
+        dst_type, code, _t1, _u = self.convert_types(t1.place, u.place)
+        t.place = self.new_temp(dst_type, t1.place, u.place)
+        t.code = t1.code + u.code + code
+        if t.place is None:
+            t.place = Constant(dst_type, t1.place.value * u.place.value)
+        else:
+            t.code += [MultipleInst(t.place, _t1, _u)]
 
     @parameterize_children
     def exitDivitionTerm(self, t: VA, t1: VA, u: VA):
-        t.place = self.new_temp(max(t1.place.type, u.place.type))
-        t.code = t1.code + u.code + [DivisionInst(t.place, t1.place, u.place)]
+        dst_type, code, _t1, _u = self.convert_types(t1.place, u.place)
+        t.place = self.new_temp(dst_type, t1.place, u.place)
+        t.code = t1.code + u.code + code
+        if t.place is None:
+            t.place = Constant(dst_type, int(t1.place.value / u.place.value))
+        else:
+            t.code += [DivisionInst(t.place, _t1, _u)]
 
     @parameterize_children
     def exitNegUnary(self, u: VA, f: VA):
-        u.place = self.new_temp(f.place.type)
-        u.code = [SubInst(u.place, 0, f.place)]
+        u.place = self.new_temp(f.place.type, f.place)
+        u.code = []
+        if u.place is None:
+            u.place = Constant(f.place.type, -f.place.value)
+        else:
+            u.code += [SubInst(u.place, Constant(f.place.type, 0), f.place)]
 
     @parameterize_children
     def exitFactorUnary(self, u: VA, f: VA):

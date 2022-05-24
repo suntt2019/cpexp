@@ -61,7 +61,7 @@ class X86Generator(Generator):
     @gen.register
     def _(self, inst: DataInst):
         return [
-            _TEXT(f'\t{inst.place.name}: d{bits_to_type(inst.place.type.bits)} {inst.place.initial}\n')
+            _TEXT(f'\t{inst.place.name}: d{bits_to_type(inst.place.type.bits)} {inst.place.initial.value}\n')
         ]
 
     @gen.register
@@ -89,7 +89,7 @@ class X86Generator(Generator):
     @gen.register
     def _(self, inst: ConvertInst):
         return [
-            _TEXT(f'\t; {inst.dst} := {inst.src_type}_to_{inst.dst_type}({inst.src})\n')
+            _TEXT(f'\t; {inst.dst.name} := {inst.src.type.name}_to_{inst.dst.type.name}({inst.src.name})\n')
             # TODO: add float computing
         ]
 

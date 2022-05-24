@@ -34,7 +34,9 @@ class Semantic(CPExpListener):
         self.labels.append(ret)
         return ret
 
-    def new_temp(self, _type: Type):
+    def new_temp(self, _type: Type, *dependencies: Place):
+        if len(dependencies) > 0 and all(map(lambda x: isinstance(x, Constant), dependencies)):
+            return None
         ret = Place(f't{len(self.temp)}', _type)
         self.temp.append(ret)
         return ret
@@ -77,12 +79,12 @@ class Semantic(CPExpListener):
         return self.functions[name]
 
     def convert_type(self, dst_type: Type, src: Place) -> tuple[Place, list[ConvertInst]]:
-        # TODO: check if place is Constant, calculate during compile; maybe do this in an optimizer
-        src_type = src.type
-        if src_type == dst_type:
+        if src.type == dst_type:
             return src, []
-        dst = self.new_temp(dst_type)
-        code = ConvertInst(src_type, dst_type, src, dst)
+        dst = self.new_temp(dst_type, src)
+        if dst is None:
+            dst = Constant(dst_type, src.value)
+        code = ConvertInst(src, dst)
         return dst, [code]
 
     def convert_types(self, *places: Place, type_require: Type = None):
@@ -135,12 +137,12 @@ class VA:
     """VA: Variable Attributes"""
 
     def __init__(self):
-        self.code = None    # type: list[Instruction] | None
-        self.place = None   # type: Place | None
-        self.begin = None   # type: Label | None
-        self.next = None    # type: Label | None
-        self.true = None    # type: Label | None
-        self.false = None   # type: Label | None
+        self.code = None  # type: list[Instruction] | None
+        self.place = None  # type: Place | None
+        self.begin = None  # type: Label | None
+        self.next = None  # type: Label | None
+        self.true = None  # type: Label | None
+        self.false = None  # type: Label | None
         self.other = {}
         self.gen_s_next = False
 

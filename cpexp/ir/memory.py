@@ -43,6 +43,7 @@ class VoidPlace(Place):
 
 class Constant(Place):
     def __init__(self, _type: Type, value):
+        self.value = value
         super().__init__(f'{value}', _type)
 
 
