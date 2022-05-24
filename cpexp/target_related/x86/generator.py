@@ -1,4 +1,5 @@
 import os.path
+from itertools import zip_longest
 
 from cpexp.base import working_dir
 from cpexp.generic.generator import *
@@ -61,21 +62,33 @@ class X86Generator(Generator):
     @gen.register
     def _(self, inst: DataInst):
         return [
-            _TEXT(f'\t{inst.place.name}: d{bits_to_type(inst.place.type.bits)} {inst.place.initial.value}\n')
+            _TEXT(f'\t{inst.place.name}: d{bits_to_type(inst.place.type.byte)} {inst.place.initial.value}\n')
         ]
 
     @gen.register
     def _(self, inst: BSSInst):
         return [
-            _TEXT(f'\t{inst.place.name}: res{bits_to_type(inst.place.type.bits)} 1\n')
+            _TEXT(f'\t{inst.place.name}: res{bits_to_type(inst.place.type.byte)} 1\n')
         ]
 
     @gen.register
     def _(self, inst: FunctionStartInst):
         alloc = []
-        if inst.function.local_size > 0:
+        allocated_byte = inst.function.local_size
+        stack_address = 8
+        for param, reg in zip_longest(inst.function.param_list, [rdi, rsi, rdx, rcx, r8, r9]):
+            if param is None:
+                break
+            allocated_byte += param.type.byte
+            param.address = -allocated_byte
+            if reg is not None:
+                alloc += [MOV(param, reg)]
+            else:
+                stack_address += 8
+                alloc += [MOV(param, Local('TMP_LOCAL', C4eType('long'), stack_address))]
+        if allocated_byte > 0:
             # TODO: Add X86Type which is almost same with C4eType, then add conversion between them
-            alloc = [SUB(rsp, Constant(C4eType('long'), inst.function.local_size))]
+            alloc = [SUB(rsp, Constant(C4eType('long'), allocated_byte))] + alloc
         return [
             _TEXT(f'\n{inst.function.name}:\n'),
             PUSH(rbp),
@@ -115,13 +128,22 @@ class X86Generator(Generator):
 
     @gen.register
     def _(self, inst: CallInst):
-        push_args = []
-        for arg in inst.arguments:
-            push_args.append(PUSH(arg))
+        store_args = []
+        for arg, reg in zip_longest(inst.arguments, [rdi, rsi, rdx, rcx, r8, r9]):
+            if arg is None:
+                break
+            if reg is not None:
+                store_args.append(MOV(reg, arg))
+            else:
+                store_args.append(PUSH(arg))
         assign = []
         if not isinstance(inst.place, VoidPlace):
             assign = [MOV(inst.place, rax)]
-        return push_args + [CALL(inst.function)] + assign + [ADD(rsp, Constant(C4eType('long'), inst.function.param_size))]
+        recover_rsp = []
+        pushed_count = max(0, len(inst.arguments) - 6)
+        if pushed_count > 0:
+            recover_rsp = [ADD(rsp, Constant(C4eType('long'), pushed_count))]
+        return store_args + [CALL(inst.function)] + assign + recover_rsp
 
     @gen.register
     def _(self, inst: TwoOperandAssignInst):

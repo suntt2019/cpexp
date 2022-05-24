@@ -49,7 +49,8 @@ class Semantic(CPExpListener):
         return ret
 
     def new_local(self, name: str, _type: Type, initial=None):
-        return self.context.add_local(name, _type, initial)
+        address = -self.context.function.use_memory(_type.byte)
+        return self.context.add_local(Local(name, _type, address, initial))
 
     def get_variable(self, name: str):
         local = self.context[name]

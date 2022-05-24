@@ -12,7 +12,7 @@ class TACPGenerator(Generator):
 
     @gen.register
     def _(self, inst: DataInst):
-        return f'[{inst.place.name}({inst.place.type.bits}) = {inst.place.initial}]\n'
+        return f'[{inst.place.name}({inst.place.type.byte}) = {inst.place.initial}]\n'
 
     @gen.register
     def _(self, inst: FunctionStartInst):

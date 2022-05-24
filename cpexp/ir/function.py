@@ -1,16 +1,15 @@
 import math
 
 from cpexp.ir.base import InstructionContent
-from cpexp.ir.memory import Type
+from cpexp.ir.memory import Type, Local
 
 
 class Function(InstructionContent):
     def __init__(self, name: str, return_type: Type | None, param_list: list[tuple[Type, str]], internal=False):
-        self._name = name
-        self.return_type = return_type
-        self.local_size = 0
-        self.param_list = param_list
-        self.param_size = sum(map(lambda x: math.ceil(x[0].bits / 8), param_list))
+        self._name = name  # type: str
+        self.return_type = return_type  # type: Type
+        self.local_size = 0  # type: int
+        self.param_list = list(map(lambda x: Local(x[1], x[0], 0), param_list))  # type: list[Local]
         self.internal = internal
         # When add overload and function declaration,
         #   add self.definition to mark if function has been defined and where it's defined

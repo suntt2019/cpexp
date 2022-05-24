@@ -10,7 +10,7 @@ class Type(InstructionContent):
 
     def __init__(self, name: str):
         self.name = name
-        self._id, self.bits = self.types[name]
+        self._id, self.byte = self.types[name]
         # TODO: For more complex type system, use POSet instead of id
 
     def __lt__(self, other: Type):

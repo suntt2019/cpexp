@@ -1,13 +1,17 @@
 long print_int(long x);
 
-long a = 3*2/2+100;
+long a = 1;
+
+long add(long a, long b) {
+    return a + b;
+}
 
 long main() {
-    long b = 3;
-    b = a+b;
+    long b = 1;
+    b = add(a, b);
     if(b>0) {
-        b = b + 1;
+        b = b + 10;
     }
-    print_int(a);
+    print_int(b);
     return 0;
 }

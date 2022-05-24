@@ -215,7 +215,7 @@ class C4eSemantic(Semantic):
         arg_places = list(map(lambda x: x.place, e))
         arg_types = list(map(lambda x: x.type, arg_places))
         func = self.get_function(_id, arg_types)
-        param_types = list(map(lambda x: x[0], func.param_list))
+        param_types = list(map(lambda x: x.type, func.param_list))
         _arg_places, arg_conv_code = self.convert_type_list(arg_places, param_types)
         if func.return_type is not None:
             s.place = self.new_temp(func.return_type)

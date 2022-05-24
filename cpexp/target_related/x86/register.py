@@ -25,11 +25,28 @@ class WordRegister(X86Reg):
     NAME = '?__'
 
     def __init__(self, size: int | None = None):
-        if size not in [2, 4, 8]:
+        if size not in [1, 2, 4, 8]:
             raise Exception(f'Invalid size "{size}"')
         formats = {
+            1: '{}l',
             2: '{}',
             4: 'e{}',
+            8: 'r{}'
+        }
+        self.name = formats[size].format(self.NAME[1:])
+        super().__init__(size)
+
+
+class AdditionalRegister(X86Reg):
+    NAME = 'r?'
+
+    def __init__(self, size: int | None = None):
+        if size not in [1, 2, 4, 8]:
+            raise Exception(f'Invalid size "{size}"')
+        formats = {
+            1: 'r{}b',
+            2: 'r{}w',
+            4: 'r{}d',
             8: 'r{}'
         }
         self.name = formats[size].format(self.NAME[1:])
@@ -68,6 +85,38 @@ class BP(WordRegister):
     NAME = '?bp'
 
 
+class R8(AdditionalRegister):
+    NAME = 'r8'
+
+
+class R9(AdditionalRegister):
+    NAME = 'r9'
+
+
+class R10(AdditionalRegister):
+    NAME = 'r10'
+
+
+class R11(AdditionalRegister):
+    NAME = 'r11'
+
+
+class R12(AdditionalRegister):
+    NAME = 'r12'
+
+
+class R13(AdditionalRegister):
+    NAME = 'r13'
+
+
+class R14(AdditionalRegister):
+    NAME = 'r14'
+
+
+class R15(AdditionalRegister):
+    NAME = 'r15'
+
+
 rax = AX(8)
 rbx = BX(8)
 rcx = CX(8)
@@ -76,3 +125,11 @@ rsi = SI(8)
 rdi = DI(8)
 rbp = BP(8)
 rsp = SP(8)
+r8 = R8(8)
+r9 = R9(8)
+r10 = R10(8)
+r11 = R11(8)
+r12 = R12(8)
+r13 = R13(8)
+r14 = R14(8)
+r15 = R15(8)
