@@ -8,7 +8,7 @@ class C4eLexer(CPELexer):
         ret = txt
         type_id = token.type
         type_name = self.symbolicNames[type_id]
-        if type_id < len(self.literalNames) and type_name != 'VOID':
+        if type_id < len(self.literalNames) and type_name not in ['VOID', 'DOTS']:
             ret = '_'
         elif type_name.startswith('INT'):
             base = int(type_name[3:])

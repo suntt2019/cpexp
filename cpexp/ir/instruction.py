@@ -4,6 +4,12 @@ from cpexp.ir.label import Label
 from cpexp.ir.memory import *
 
 
+class SymbolInst(Instruction):
+    def __init__(self, name: str, type_name: str):
+        self.name = name  # type: str
+        self.type_name = type_name  # type: str
+
+
 class SectionStartInst(Instruction):
     def __init__(self, name: str):
         self.name = name  # type: str

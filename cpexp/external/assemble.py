@@ -31,7 +31,8 @@ def assemble(code: str, clean=True, verbose=0, output_path=os.path.join(working_
     if exit_code != 0:
         raise Exception(f'Assemble Failed: \n{out}')
 
-    out, exit_code = execute([ld_path, obj_file, '-o', output_path], verbose=verbose)
+    # out, exit_code = execute([ld_path, obj_file, '-o', output_path], verbose=verbose)
+    out, exit_code = execute([ld_path, '-dynamic-linker', '/lib64/ld-linux-x86-64.so.2', '-lc', obj_file, '-o', output_path], verbose=verbose)
     if exit_code != 0:
         raise Exception(f'Assemble Failed: \n{out}')
 

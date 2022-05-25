@@ -1,3 +1,4 @@
+import base64
 from functools import reduce
 from itertools import zip_longest
 
@@ -33,13 +34,18 @@ class C4eSemantic(Semantic):
             _type = None
         else:
             _type = C4eType(type_name)
+        varargs = False
+        if len(param_list) > 0 and param_list[-1] == '...':
+            param_list = param_list[:-1]
+            varargs = True
         parameters = []
         for param_type, param_id in zip_longest(*([iter(param_list)] * 2)):
             parameters.append((C4eType(param_type), param_id))
-        fp['func'] = self.new_function(_id, _type, parameters)
+        fp['func'] = self.new_function(Function(_id, _type, parameters, varargs))
 
     @parameterize_children
     def enterFunctionBody(self, fb: VA, b: VA):
+        fb['prototype']['func'].implement()
         self.enter(fb['prototype']['func'])
 
     @parameterize_children
@@ -86,7 +92,7 @@ class C4eSemantic(Semantic):
             place = self.new_global(_id, C4eType(_type), initial)
             s.code = []
             if e is not None and len(e.code) > 0:
-                self.init_code += e.code + [AssignInst(place, e.place)]
+                raise Exception('Global variable initializer should be const')
         else:
             place = self.new_local(_id, C4eType(_type), initial)
             s.code = e.code
@@ -216,7 +222,11 @@ class C4eSemantic(Semantic):
         arg_types = list(map(lambda x: x.type, arg_places))
         func = self.get_function(_id, arg_types)
         param_types = list(map(lambda x: x.type, func.param_list))
-        _arg_places, arg_conv_code = self.convert_type_list(arg_places, param_types)
+        if func.varargs:
+            _arg_places, arg_conv_code = self.convert_type_list(arg_places[:len(param_types)], param_types)
+            _arg_places += arg_places[len(param_types):]
+        else:
+            _arg_places, arg_conv_code = self.convert_type_list(arg_places, param_types)
         if func.return_type is not None:
             s.place = self.new_temp(func.return_type)
         else:
@@ -300,4 +310,15 @@ class C4eSemantic(Semantic):
     @parameterize_children
     def exitReal16Factor(self, f: VA, float16):
         f.place = Constant(C4eType('float'), float16)
+        f.code = []
+
+    @parameterize_children
+    def exitStringFactor(self, f: VA, string: str):
+        if string.isalnum():
+            _id = string
+        else:
+            _id = base64.b64encode(string.encode("ascii")).decode("ascii").replace('=', '')
+        _id = f'str_{_id}'
+        _type = C4eType('string')
+        f.place = self.new_global(_id, _type, Constant(_type, string))
         f.code = []

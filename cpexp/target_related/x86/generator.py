@@ -26,18 +26,18 @@ def get_template():
     return template
 
 
-def bits_to_type(bits: int):
-    if bits > 64:
-        raise Exception(f'Unsupported word length {bits}')
-    elif bits <= 0:
-        raise Exception(f'Invalid non-positive bits {bits}')
-    elif bits <= 8:
+def bits_to_type(byte: int):
+    if byte > 8:
+        raise Exception(f'Unsupported word length {byte}')
+    elif byte <= 0:
+        raise Exception(f'Invalid non-positive bits {byte}')
+    elif byte <= 1:
         data_type = 'b'
-    elif bits <= 16:
+    elif byte <= 2:
         data_type = 'w'
-    elif bits <= 32:
+    elif byte <= 4:
         data_type = 'd'
-    else:  # bits <= 64
+    else:  # bits <= 8
         data_type = 'q'
     return data_type
 
@@ -54,6 +54,12 @@ class X86Generator(Generator):
         raise Exception(f'Unable to generate from type {x.__class__.__name__} object {x}')
 
     @gen.register
+    def _(self, inst: SymbolInst):
+        return [
+            _TEXT(f'\n{inst.type_name} {inst.name}\n')
+        ]
+
+    @gen.register
     def _(self, inst: SectionStartInst):
         return [
             _TEXT(f'\n\tsection .{inst.name}\n')
@@ -61,6 +67,11 @@ class X86Generator(Generator):
 
     @gen.register
     def _(self, inst: DataInst):
+        if inst.place.type.name == 'string':
+            initial = f'"{inst.place.initial.value}", 0'.replace('\\n', '", 10, "').replace(', ""', '')
+            return [
+                _TEXT(f'\t{inst.place.name}: db {initial}\n')
+            ]
         return [
             _TEXT(f'\t{inst.place.name}: d{bits_to_type(inst.place.type.byte)} {inst.place.initial.value}\n')
         ]
@@ -219,6 +230,8 @@ class X86Generator(Generator):
 
     @gen.register
     def _(self, content: Place):
+        if content.type.name == 'string':
+            return content.name
         return f'qword [{content.name}]'
 
     @gen.register

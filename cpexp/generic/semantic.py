@@ -15,12 +15,11 @@ class Semantic(CPExpListener):
     def __init__(self, token_value: list):
         self.token_value = token_value
         self.variable_attributes = {}
-        self.labels = []
-        self.temp = []
-        self.global_ = {}
-        self.functions = {}
-        self.context = Context()
-        self.init_code = []
+        self.labels = []            # type: list[Label]
+        self.temp = []              # type: list[Place]
+        self.global_ = {}           # type: dict[str, Place]
+        self.functions = {}         # type: dict[str, Function]
+        self.context = Context()    # type: Context
 
     def get_data(self, x):
         if type(x) == TerminalNodeImpl:
@@ -66,12 +65,11 @@ class Semantic(CPExpListener):
     # Structure: (memory, label, function) -> (symbol table, context)
     # For context free symbols, in the symbol table
     # For context related symbols, in the context
-    def new_function(self, name: str, return_type: Type | None, param_types: list[tuple[Type, str]]):
-        if name in self.functions:
-            raise Exception(f'Function "{name}" already exists.')
-        ret = Function(name, return_type, param_types)
-        self.functions[name] = ret
-        return ret
+    def new_function(self, function: Function):
+        if function.name in self.functions:
+            raise Exception(f'Function "{function.name}" already exists.')
+        self.functions[function.name] = function
+        return function
 
     def get_function(self, name: str, param_types: list[Type] = None):
         # TODO: add function overload
@@ -119,7 +117,10 @@ class Semantic(CPExpListener):
     def analyze(self, ast):
         walker = ParseTreeWalker()
         walker.walk(self, ast)
-        init = [FunctionStartInst(Function('init', None, [], internal=True))] + self.init_code + [ReturnInst()]
+        symbol = []
+        for f in self.functions.values():
+            if not f.implemented:
+                symbol.append(SymbolInst(f.name, 'extern'))
         data_section = [SectionStartInst('data')]
         bss_section = [SectionStartInst('bss')]
         for var in self.temp + list(self.global_.values()):
@@ -131,7 +132,7 @@ class Semantic(CPExpListener):
                     data_section.append(DataInst(var))
                 else:
                     bss_section.append(BSSInst(var))
-        return data_section + bss_section + [SectionStartInst('text')] + init + self.variable_attributes[ast].code
+        return symbol + data_section + bss_section + [SectionStartInst('text')] + self.variable_attributes[ast].code
 
 
 class VA:

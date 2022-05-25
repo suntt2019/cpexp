@@ -13,7 +13,7 @@ function_definition
   ;
 
 function_prototype
-  : (VOID|TYPE_) IDN LP ((TYPE_ IDN COMMA)* TYPE_ IDN)? RP     # FunctionPrototype
+  : (VOID|TYPE_) IDN LP ((TYPE_ IDN COMMA)* (TYPE_ IDN|DOTS))? RP     # FunctionPrototype
   ;
 
 function_body
@@ -100,6 +100,7 @@ factor
   | REAL8               # Real8Factor
   | REAL10              # Real10Factor
   | REAL16              # Real16Factor
+  | STR                 # StringFactor
   ;
 
 
@@ -126,9 +127,11 @@ COMMA: ',';
 SEM: ';';
 LB: '{';  // Braces
 RB: '}';
+
+DOTS: '...';
 VOID: 'void';
 
-TYPE_: 'long' | 'float';
+TYPE_: 'string' | 'long' | 'float';
 IDN: [a-zA-Z]([a-zA-Z]|[0-9])*(('_'|'.')([a-zA-Z]|[0-9])+)?;
 INT16: ('0x'|'0X')[0-9a-f]+;
 REAL16: INT16'.'[0-9a-f]+;
