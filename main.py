@@ -20,7 +20,7 @@ compiles = [
 ]
 v = 1
 c = compiles[0]
-# print('\n'.join(c.lex_tokens()))
+print('\n'.join(c.lex_tokens()))
 code = c.compile(merge_labels, rename_labels, verbose=v)
 print(code)
 # input()

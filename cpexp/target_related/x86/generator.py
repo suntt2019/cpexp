@@ -43,6 +43,15 @@ def byte_to_type(byte: int):
     return data_type
 
 
+def type_to_specifier(_type: str):
+    return {
+        'q': 'qword',
+        'd': 'dword',
+        'w': 'word',
+        'b': 'byte'
+    }[_type]
+
+
 # Generate intel syntax for nasm
 class X86Generator(Generator):
     def generate(self, ir: list[Instruction]) -> str:
@@ -126,13 +135,22 @@ class X86Generator(Generator):
             raise Exception(f'Unexpected conversion instruction between same types')
         conv = []
         instructions = {}
-        signed = ['int', 'long']
-        if src in signed and dst in signed:
+        signed = ['char', 'short', 'int', 'long']
+        if src in signed + ['bool'] and dst in signed:
             # between signed
             if src == 'long':
                 conv = [MOV(rax, inst.src)]
             else:
                 conv = [MOVSX(rax, inst.src)]
+        elif src in signed and dst == 'bool':
+            conv = [
+                CMP(inst.src, Constant(inst.src.type, 0)),
+                LAHF(),
+                _TEXT('\tmov\tal, ah\n'),
+                NOT(AX(1)),
+                AND(AX(1), Constant(C4eType('long'), int('01000000', base=2))),
+                SHR(AX(1), Constant(C4eType('long'), 6))
+            ]
         else:
             if src not in instructions:
                 raise Exception(f'Unsupported source type {src}')
@@ -210,7 +228,7 @@ class X86Generator(Generator):
         }
         op = inst.OP
         type_name = inst.target.type.name
-        if type_name in ['int', 'long']:
+        if type_name in ['char', 'short', 'int', 'long']:
             type_name = 'signed'
         if op not in instructions:
             raise Exception(f'Unsupported operator {op}')
@@ -223,17 +241,20 @@ class X86Generator(Generator):
     def _(self, inst: IfGotoInst):
         instructions = {
             '>': {
-                'long': [JG(inst.label)]
+                'signed': [JG(inst.label)]
             },
             '<': {
-                'long': [JL(inst.label)]
+                'signed': [JL(inst.label)]
             },
             '==': {
-                'long': [JE(inst.label)]
+                'signed': [JE(inst.label)],
+                'bool': [JE(inst.label)]
             },
         }
         op = inst.op
         type_name = inst.operand1.type.name
+        if type_name in ['char', 'short', 'int', 'long']:
+            type_name = 'signed'
         if op not in instructions:
             raise Exception(f'Unsupported operator {op}')
         if type_name not in instructions[op]:
@@ -265,13 +286,13 @@ class X86Generator(Generator):
 
     @gen.register
     def _(self, content: Local):
-        return f'{byte_to_type(content.type.byte)}word [rbp{content.address:+d}]'
+        return f'{type_to_specifier(byte_to_type(content.type.byte))} [rbp{content.address:+d}]'
 
     @gen.register
     def _(self, content: Place):
         if content.type.name == 'string':
             return content.name
-        return f'{byte_to_type(content.type.byte)}word [{content.name}]'
+        return f'{type_to_specifier(byte_to_type(content.type.byte))} [{content.name}]'
 
     @gen.register
     def _(self, content: Function):

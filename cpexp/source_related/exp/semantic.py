@@ -29,7 +29,7 @@ class ExpSemantic(Semantic):
     def enterIfStatement(self, s: VA, c: VA, s1: VA):
         if s.next is None:
             s.next = self.new_label()
-            s.gen_s_next = True
+            s.gen_next = True
         c.true = self.new_label()
         c.false = s.next
         s1.next = s.next
@@ -38,14 +38,14 @@ class ExpSemantic(Semantic):
     def exitIfStatement(self, s: VA, c: VA, s1: VA):
         s.code = c.code + [LabelInst(c.true)] \
                  + s1.code
-        if s.gen_s_next:
+        if s.gen_next:
             s.code += [LabelInst(s.next)]
 
     @parameterize_children
     def enterIfElseStatement(self, s: VA, c: VA, s1: VA, s2: VA):
         if s.next is None:
             s.next = self.new_label()
-            s.gen_s_next = True
+            s.gen_next = True
         c.true = self.new_label()
         c.false = self.new_label()
         s1.next = s.next
@@ -55,14 +55,14 @@ class ExpSemantic(Semantic):
     def exitIfElseStatement(self, s: VA, c: VA, s1: VA, s2: VA):
         s.code = c.code + [LabelInst(c.true)] + s1.code \
                  + [LabelInst(c.false)] + s2.code
-        if s.gen_s_next:
+        if s.gen_next:
             s.code += [LabelInst(s.next)]
 
     @parameterize_children
     def enterWhileStatement(self, s: VA, c: VA, s1: VA):
         if s.next is None:
             s.next = self.new_label()
-            s.gen_s_next = True
+            s.gen_next = True
         s.begin = self.new_label()
         c.true = self.new_label()
         c.false = s.next
@@ -72,7 +72,7 @@ class ExpSemantic(Semantic):
     def exitWhileStatement(self, s: VA, c: VA, s1: VA):
         s.code = [LabelInst(s.begin)] + c.code \
                  + [LabelInst(c.true)] + s1.code + [GotoInst(s.begin)]
-        if s.gen_s_next:
+        if s.gen_next:
             s.code += [LabelInst(s.next)]
 
     @parameterize_children

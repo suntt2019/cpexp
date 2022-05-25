@@ -83,7 +83,11 @@ class Semantic(CPExpListener):
         dst = self.new_temp(dst_type, src)
         code = []
         if dst is None:
-            dst = Constant(dst_type, src.value)
+            # TODO: refactor this
+            if dst_type.name == 'bool':
+                dst = Constant(dst_type, int(src.value != 0))
+            else:
+                dst = Constant(dst_type, src.value)
         else:
             code += [ConvertInst(src, dst)]
         return dst, code
@@ -148,7 +152,7 @@ class VA:
         self.true = None  # type: Label | None
         self.false = None  # type: Label | None
         self.other = {}
-        self.gen_s_next = False
+        self.gen_next = False
 
     def __str__(self):
         return f'(code={self.code}, place={self.place})'

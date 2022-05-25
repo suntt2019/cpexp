@@ -8,13 +8,17 @@ int add(int a, int b) {
 }
 
 int main() {
-    int b = 1;
+    bool bb;
+    bb = 4 + a;
+    int b = bb;
     b = add(a, b);
-    if(b>0) {
+    // b = 2
+    if(b>0 && printf("this shouldn't print\n", b)) {
         b = b + 10;
     }
-    b = labs(a);
-    int d = printf("%ld %ld\n", a, b);
+//    b = labs(a);
+    char ch = 'a' + 1;
+    int d = printf("%ld %ld %c %d\n", a, b, ch, bb);
     printf("%d\n", d);
     return 0;
 }

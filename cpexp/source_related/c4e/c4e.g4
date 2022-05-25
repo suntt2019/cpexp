@@ -67,17 +67,29 @@ asm_statement
   : ASM LP STR RP SEM   # AsmStatement
   ;
 
-condition
-  : expression GT expression      # GreaterCondition
-  | expression LT expression      # LessCondition
-  | expression EQ expression      # EqualCondition
+expression
+  : value_expression    # ValueExpressionExpression
+  | condition           # ConditionExpression
   ;
 
-expression
-  : expression ADD term                             # AddExpression
-  | expression NEG term                             # SubExpression
-  | term                                            # TermExpression
-  | IDN LP ((expression COMMA)* expression)? RP     # CallExpression
+condition
+  : condition AND atomic_condition            # AndCondition
+  | condition OR atomic_condition             # OrCondition
+  | atomic_condition                          # AtomicConditionCondition
+  ;
+
+atomic_condition
+  : value_expression GT value_expression      # GreaterAtomicCondition
+  | value_expression LT value_expression      # LessAtomicCondition
+  | value_expression EQ value_expression      # EqualAtomicCondition
+  | value_expression                          # ValueExpressionAtomicCondition
+  ;
+
+value_expression
+  : IDN LP ((expression COMMA)* expression)? RP         # CallValueExpression
+  | value_expression ADD term                           # AddValueExpression
+  | value_expression NEG term                           # SubValueExpression
+  | term                                                # TermValueExpression
   ;
 
 term
@@ -101,6 +113,7 @@ factor
   | REAL10              # Real10Factor
   | REAL16              # Real16Factor
   | STR                 # StringFactor
+  | CHAR                # CharFactor
   ;
 
 
@@ -127,11 +140,15 @@ COMMA: ',';
 SEM: ';';
 LB: '{';  // Braces
 RB: '}';
+AND: '&&';
+OR: '||';
+NOT: '!';
 
 DOTS: '...';
 VOID: 'void';
 
-TYPE_: 'string' | 'int' | 'long' | 'float';
+BOOL: 'true' | 'false';
+TYPE_: 'string' | 'bool' | 'char' | 'short' | 'int' | 'long' | 'float';
 IDN: [a-zA-Z]([a-zA-Z]|[0-9])*(('_'|'.')([a-zA-Z]|[0-9])+)?;
 INT16: ('0x'|'0X')[0-9a-f]+;
 REAL16: INT16'.'[0-9a-f]+;
@@ -140,6 +157,7 @@ REAL8: INT8'.'[0-7]+;
 INT10: '0'|[1-9][0-9]*;
 REAL10: INT10'.'[0-9]+;
 STR: '"'.*?'"';
+CHAR: '\''.'\'';
 
 WS : [ \r\t\n]+ -> skip ;
 BLOCK_COMMENT: '/*' .*? '*/' -> skip;

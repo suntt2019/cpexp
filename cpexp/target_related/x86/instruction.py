@@ -92,7 +92,27 @@ class JL(X86):
 
 
 class JE(X86):
-    NAME = 'jE'
+    NAME = 'je'
+    OP_CNT = 1
+
+
+class LAHF(X86):
+    NAME = 'lahf'
+    OP_CNT = 0
+
+
+class SHR(X86):
+    NAME = 'shr'
+    OP_CNT = 2
+
+
+class AND(X86):
+    NAME = 'and'
+    OP_CNT = 2
+
+
+class NOT(X86):
+    NAME = 'not'
     OP_CNT = 1
 
 

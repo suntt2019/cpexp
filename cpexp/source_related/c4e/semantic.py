@@ -27,7 +27,7 @@ class C4eSemantic(Semantic):
         fd.code = []
 
     @parameterize_children
-    def exitFunctionPrototype(self, fp: VA, type_name, _id, *param_list):
+    def exitFunctionPrototype(self, fp: VA, type_name: str, _id: str, *param_list: str):
         # Merge each two elements into a tuple in a list
         # Reference: https://segmentfault.com/q/1010000007881319
         if type_name == 'void':
@@ -83,7 +83,7 @@ class C4eSemantic(Semantic):
         s.code = e.code
 
     @parameterize_children
-    def exitDeclare_statement(self, s: VA, _type, _id, e: VA = None):
+    def exitDeclare_statement(self, s: VA, _type: str, _id: str, e: VA = None):
         if e is None:
             initial = None
         else:
@@ -95,58 +95,61 @@ class C4eSemantic(Semantic):
                 raise Exception('Global variable initializer should be const')
         else:
             place = self.new_local(_id, C4eType(_type), initial)
-            s.code = e.code
+            s.code = []
+            if e is not None:
+                s.code += e.code
             if initial is not None:
-                s.code.append(AssignInst(place, e.place))
+                _e, code = self.convert_type(C4eType(_type), e.place)
+                s.code += code + [AssignInst(place, _e)]
 
     @parameterize_children
-    def enterIfStatement(self, s: VA, c: VA, s1: VA):
+    def enterIfStatement(self, s: VA, e: VA, s1: VA):
         if s.next is None:
             s.next = self.new_label()
-            s.gen_s_next = True
-        c.true = self.new_label()
-        c.false = s.next
+            s.gen_next = True
+        e.true = self.new_label()
+        e.false = s.next
         s1.next = s.next
 
     @parameterize_children
-    def exitIfStatement(self, s: VA, c: VA, s1: VA):
-        s.code = c.code + [LabelInst(c.true)] \
+    def exitIfStatement(self, s: VA, e: VA, s1: VA):
+        s.code = e.code + [LabelInst(e.true)] \
                  + s1.code
-        if s.gen_s_next:
+        if s.gen_next:
             s.code += [LabelInst(s.next)]
 
     @parameterize_children
-    def enterIfElseStatement(self, s: VA, c: VA, s1: VA, s2: VA):
+    def enterIfElseStatement(self, s: VA, e: VA, s1: VA, s2: VA):
         if s.next is None:
             s.next = self.new_label()
-            s.gen_s_next = True
-        c.true = self.new_label()
-        c.false = self.new_label()
+            s.gen_next = True
+        e.true = self.new_label()
+        e.false = self.new_label()
         s1.next = s.next
         s2.next = s.next
 
     @parameterize_children
-    def exitIfElseStatement(self, s: VA, c: VA, s1: VA, s2: VA):
-        s.code = c.code + [LabelInst(c.true)] + s1.code \
-                 + [GotoInst(s.next), LabelInst(c.false)] + s2.code
-        if s.gen_s_next:
+    def exitIfElseStatement(self, s: VA, e: VA, s1: VA, s2: VA):
+        s.code = e.code + [LabelInst(e.true)] + s1.code \
+                 + [GotoInst(s.next), LabelInst(e.false)] + s2.code
+        if s.gen_next:
             s.code += [LabelInst(s.next)]
 
     @parameterize_children
-    def enterWhileStatement(self, s: VA, c: VA, s1: VA):
+    def enterWhileStatement(self, s: VA, e: VA, s1: VA):
         if s.next is None:
             s.next = self.new_label()
-            s.gen_s_next = True
+            s.gen_next = True
         s.begin = self.new_label()
-        c.true = self.new_label()
-        c.false = s.next
+        e.true = self.new_label()
+        e.false = s.next
         s1.next = s.begin
 
     @parameterize_children
-    def exitWhileStatement(self, s: VA, c: VA, s1: VA):
-        s.code = [LabelInst(s.begin)] + c.code \
-                 + [LabelInst(c.true)] + s1.code + [GotoInst(s.begin)]
-        if s.gen_s_next:
+    def exitWhileStatement(self, s: VA, e: VA, s1: VA):
+        s.code = [LabelInst(s.begin)] + e.code \
+                 + [LabelInst(e.true)] + s1.code + [GotoInst(s.begin)]
+        if s.gen_next:
             s.code += [LabelInst(s.next)]
 
     @parameterize_children
@@ -169,54 +172,110 @@ class C4eSemantic(Semantic):
         self.exit()
 
     @parameterize_children
-    def exitAsmStatement(self, s: VA, string):
+    def exitAsmStatement(self, s: VA, string: str):
         s.code = [AsmInst(string)]
 
     @parameterize_children
-    def exitGreaterCondition(self, c: VA, e1: VA, e2: VA):
-        dst_type, code, _e1, _e2 = self.convert_types(e1.place, e2.place)
-        c.code = e1.code + e2.code + code \
-                 + [IfGotoInst(_e1, '>', _e2, c.true), GotoInst(c.false)]
+    def enterConditionExpression(self, e: VA, c: VA):
+        if e.next is None:
+            e.next = self.new_label()
+            e.gen_next = True
+        c.true = self.new_label()
+        c.false = self.new_label()
 
     @parameterize_children
-    def exitLessCondition(self, c: VA, e1: VA, e2: VA):
-        dst_type, code, _e1, _e2 = self.convert_types(e1.place, e2.place)
-        c.code = e1.code + e2.code + code \
-                 + [IfGotoInst(_e1, '<', _e2, c.true), GotoInst(c.false)]
+    def exitConditionExpression(self, e: VA, c: VA):
+        _bool = C4eType('bool')
+        e.place = self.new_temp(_bool)
+        e.code = c.code + [
+            LabelInst(c.true),
+            AssignInst(e.place, Constant(_bool, 1)),
+            GotoInst(e.next),
+            LabelInst(c.false),
+            AssignInst(e.place, Constant(_bool, 0))
+        ]
+        if e.gen_next:
+            e.code += [LabelInst(e.next)]
 
     @parameterize_children
-    def exitEqualCondition(self, c: VA, e1: VA, e2: VA):
-        dst_type, code, _e1, _e2 = self.convert_types(e1.place, e2.place)
-        c.code = e1.code + e2.code + code \
-                 + [IfGotoInst(_e1, '==', _e2, c.true), GotoInst(c.false)]
+    def exitValueExpressionExpression(self, e: VA, ve: VA):
+        e.place = ve.place
+        e.code = ve.code
 
     @parameterize_children
-    def exitAddExpression(self, e: VA, e1: VA, t: VA):
-        dst_type, code, _e1, _t = self.convert_types(e1.place, t.place)
-        e.place = self.new_temp(dst_type, e1.place, t.place)
-        e.code = e1.code + t.code + code
-        if e.place is None:
-            e.place = Constant(dst_type, e1.place.value + t.place.value)
+    def enterAndCondition(self, c: VA, c1: VA, ac: VA):
+        c1.false = c.false
+        ac.false = c.false
+        c1.true = self.new_label()
+        ac.true = c.true
+
+    @parameterize_children
+    def exitAndCondition(self, c: VA, c1: VA, ac: VA):
+        c.code = c1.code + [
+            LabelInst(c1.true)
+        ] + ac.code
+
+    @parameterize_children
+    def enterAtomicConditionCondition(self, c: VA, ac: VA):
+        ac.true = c.true
+        ac.false = c.false
+
+    @parameterize_children
+    def exitAtomicConditionCondition(self, c: VA, ac: VA):
+        c.code = ac.code
+
+    @parameterize_children
+    def exitValueExpressionAtomicCondition(self, c: VA, ve: VA):
+        _bool = C4eType('bool')
+        _ve, code = self.convert_type(_bool, ve.place)
+        c.code = ve.code + code \
+                 + [IfGotoInst(_ve, '==', Constant(_bool, 1), c.true), GotoInst(c.false)]
+
+    @parameterize_children
+    def exitGreaterAtomicCondition(self, ac: VA, ve1: VA, ve2: VA):
+        dst_type, code, _e1, _e2 = self.convert_types(ve1.place, ve2.place)
+        ac.code = ve1.code + ve2.code + code \
+                  + [IfGotoInst(_e1, '>', _e2, ac.true), GotoInst(ac.false)]
+
+    @parameterize_children
+    def exitLessAtomicCondition(self, ac: VA, ve1: VA, ve2: VA):
+        dst_type, code, _e1, _e2 = self.convert_types(ve1.place, ve2.place)
+        ac.code = ve1.code + ve2.code + code \
+                  + [IfGotoInst(_e1, '<', _e2, ac.true), GotoInst(ac.false)]
+
+    @parameterize_children
+    def exitEqualAtomicCondition(self, ac: VA, ve1: VA, ve2: VA):
+        dst_type, code, _e1, _e2 = self.convert_types(ve1.place, ve2.place)
+        ac.code = ve1.code + ve2.code + code \
+                  + [IfGotoInst(_e1, '==', _e2, ac.true), GotoInst(ac.false)]
+
+    @parameterize_children
+    def exitAddValueExpression(self, ve: VA, ve1: VA, t: VA):
+        dst_type, code, _e1, _t = self.convert_types(ve1.place, t.place)
+        ve.place = self.new_temp(dst_type, ve1.place, t.place)
+        ve.code = ve1.code + t.code + code
+        if ve.place is None:
+            ve.place = Constant(dst_type, ve1.place.value + t.place.value)
         else:
-            e.code += [AddInst(e.place, _e1, _t)]
+            ve.code += [AddInst(ve.place, _e1, _t)]
 
     @parameterize_children
-    def exitSubExpression(self, e: VA, e1: VA, t: VA):
-        dst_type, code, _e1, _t = self.convert_types(e1.place, t.place)
-        e.place = self.new_temp(dst_type, e1.place, t.place)
-        e.code = e1.code + t.code + code
-        if e.place is None:
-            e.place = Constant(dst_type, e1.place.value - t.place.value)
+    def exitSubValueExpression(self, ve: VA, ve1: VA, t: VA):
+        dst_type, code, _e1, _t = self.convert_types(ve1.place, t.place)
+        ve.place = self.new_temp(dst_type, ve1.place, t.place)
+        ve.code = ve1.code + t.code + code
+        if ve.place is None:
+            ve.place = Constant(dst_type, ve1.place.value - t.place.value)
         else:
-            e.code += [SubInst(e.place, _e1, _t)]
+            ve.code += [SubInst(ve.place, _e1, _t)]
 
     @parameterize_children
-    def exitTermExpression(self, e: VA, t: VA):
-        e.place = t.place
-        e.code = t.code
+    def exitTermValueExpression(self, ve: VA, t: VA):
+        ve.place = t.place
+        ve.code = t.code
 
     @parameterize_children
-    def exitCallExpression(self, s: VA, _id, *e: VA):
+    def exitCallValueExpression(self, s: VA, _id: str, *e: VA):
         arg_code = reduce(lambda a, b: a + b.code, e, [])
         arg_places = list(map(lambda x: x.place, e))
         arg_types = list(map(lambda x: x.type, arg_places))
@@ -278,37 +337,37 @@ class C4eSemantic(Semantic):
         f.code = e.code
 
     @parameterize_children
-    def exitIdentifierFactor(self, f: VA, _id):
+    def exitIdentifierFactor(self, f: VA, _id: str):
         f.place = self.get_variable(_id)
         f.code = []
 
     @parameterize_children
-    def exitInt8Factor(self, f: VA, int8):
+    def exitInt8Factor(self, f: VA, int8: int):
         f.place = Constant(C4eType('long'), int8)
         f.code = []
 
     @parameterize_children
-    def exitInt10Factor(self, f: VA, int10):
+    def exitInt10Factor(self, f: VA, int10: int):
         f.place = Constant(C4eType('long'), int10)
         f.code = []
 
     @parameterize_children
-    def exitInt16Factor(self, f: VA, int16):
+    def exitInt16Factor(self, f: VA, int16: int):
         f.place = Constant(C4eType('long'), int16)
         f.code = []
 
     @parameterize_children
-    def exitReal8Factor(self, f: VA, float8):
+    def exitReal8Factor(self, f: VA, float8: float):
         f.place = Constant(C4eType('float'), float8)
         f.code = []
 
     @parameterize_children
-    def exitReal10Factor(self, f: VA, float10):
+    def exitReal10Factor(self, f: VA, float10: float):
         f.place = Constant(C4eType('float'), float10)
         f.code = []
 
     @parameterize_children
-    def exitReal16Factor(self, f: VA, float16):
+    def exitReal16Factor(self, f: VA, float16: float):
         f.place = Constant(C4eType('float'), float16)
         f.code = []
 
@@ -321,4 +380,9 @@ class C4eSemantic(Semantic):
         _id = f'str_{_id}'
         _type = C4eType('string')
         f.place = self.new_global(_id, _type, Constant(_type, string))
+        f.code = []
+
+    @parameterize_children
+    def exitCharFactor(self, f: VA, char: str):
+        f.place = Constant(C4eType('char'), ord(char))
         f.code = []
