@@ -1,4 +1,5 @@
 from cpexp.generic.generator import Register
+from cpexp.ir.memory import Place
 
 
 class X86Reg(Register):
@@ -8,7 +9,9 @@ class X86Reg(Register):
 class GeneralRegister(X86Reg):
     NAME = '?_?'
 
-    def __init__(self, size: int | None = None):
+    def __init__(self, size: int | Place | None = None):
+        if isinstance(size, Place):
+            size = size.type.byte
         if size not in [1, 2, 4, 8]:
             raise Exception(f'Invalid size "{size}"')
         formats = {
@@ -24,7 +27,9 @@ class GeneralRegister(X86Reg):
 class WordRegister(X86Reg):
     NAME = '?__'
 
-    def __init__(self, size: int | None = None):
+    def __init__(self, size: int | Place | None = None):
+        if isinstance(size, Place):
+            size = size.type.byte
         if size not in [1, 2, 4, 8]:
             raise Exception(f'Invalid size "{size}"')
         formats = {
@@ -40,7 +45,9 @@ class WordRegister(X86Reg):
 class AdditionalRegister(X86Reg):
     NAME = 'r?'
 
-    def __init__(self, size: int | None = None):
+    def __init__(self, size: int | Place | None = None):
+        if isinstance(size, Place):
+            size = size.type.byte
         if size not in [1, 2, 4, 8]:
             raise Exception(f'Invalid size "{size}"')
         formats = {

@@ -27,6 +27,9 @@ class Register:
     def gen(self) -> str:
         return self.name
 
+    def resize(self, size: int | None = None):
+        return self.__class__(size)
+
 
 class TargetInstruction:
     NAME = 'UNKNOWN_TARGET_INSTRUCTION'

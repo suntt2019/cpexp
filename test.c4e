@@ -1,21 +1,20 @@
 long labs(long x);
-long printf(string format, ...);
+int printf(string format, ...);
 
-long a = -1;
+int a = -1;
 
-long add(long a, long b) {
+int add(int a, int b) {
     return a + b;
 }
 
-long main() {
-    long b = 1;
+int main() {
+    int b = 1;
     b = add(a, b);
     if(b>0) {
         b = b + 10;
     }
     b = labs(a);
-    asm("xor rax, rax");
-    printf("%ld %ld\n", a, b);
-//    print_int(b);
+    int d = printf("%ld %ld\n", a, b);
+    printf("%d\n", d);
     return 0;
 }

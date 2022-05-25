@@ -131,7 +131,7 @@ RB: '}';
 DOTS: '...';
 VOID: 'void';
 
-TYPE_: 'string' | 'long' | 'float';
+TYPE_: 'string' | 'int' | 'long' | 'float';
 IDN: [a-zA-Z]([a-zA-Z]|[0-9])*(('_'|'.')([a-zA-Z]|[0-9])+)?;
 INT16: ('0x'|'0X')[0-9a-f]+;
 REAL16: INT16'.'[0-9a-f]+;

@@ -21,6 +21,11 @@ class MOV(X86):
     OP_CNT = 2
 
 
+class MOVSX(X86):
+    NAME = 'movsx'
+    OP_CNT = 2
+
+
 class ADD(X86):
     NAME = 'add'
     OP_CNT = 2

@@ -10,6 +10,7 @@ from cpexp.target_related.x86.register import *
 
 template = None
 
+
 # TODO: use different register for different size
 # TODO: Alloc registers
 
@@ -26,7 +27,7 @@ def get_template():
     return template
 
 
-def bits_to_type(byte: int):
+def byte_to_type(byte: int):
     if byte > 8:
         raise Exception(f'Unsupported word length {byte}')
     elif byte <= 0:
@@ -73,13 +74,13 @@ class X86Generator(Generator):
                 _TEXT(f'\t{inst.place.name}: db {initial}\n')
             ]
         return [
-            _TEXT(f'\t{inst.place.name}: d{bits_to_type(inst.place.type.byte)} {inst.place.initial.value}\n')
+            _TEXT(f'\t{inst.place.name}: d{byte_to_type(inst.place.type.byte)} {inst.place.initial.value}\n')
         ]
 
     @gen.register
     def _(self, inst: BSSInst):
         return [
-            _TEXT(f'\t{inst.place.name}: res{bits_to_type(inst.place.type.byte)} 1\n')
+            _TEXT(f'\t{inst.place.name}: res{byte_to_type(inst.place.type.byte)} 1\n')
         ]
 
     @gen.register
@@ -93,18 +94,25 @@ class X86Generator(Generator):
             allocated_byte += param.type.byte
             param.address = -allocated_byte
             if reg is not None:
-                alloc += [MOV(param, reg)]
+                alloc += [MOV(param, reg.resize(param))]
             else:
                 stack_address += 8
-                alloc += [MOV(param, Local('TMP_LOCAL', C4eType('long'), stack_address))]
+                temp_local = Local('TEMP_LOCAL', C4eType('long'), stack_address)
+                if param.type.byte == 8:
+                    alloc += [MOV(param, temp_local)]
+                else:
+                    alloc += [
+                        MOV(rax, temp_local),
+                        MOV(param, AX(param))
+                    ]
         if allocated_byte > 0:
             # TODO: Add X86Type which is almost same with C4eType, then add conversion between them
             alloc = [SUB(rsp, Constant(C4eType('long'), allocated_byte))] + alloc
         return [
-            _TEXT(f'\n{inst.function.name}:\n'),
-            PUSH(rbp),
-            MOV(rbp, rsp)
-        ] + alloc
+                   _TEXT(f'\n{inst.function.name}:\n'),
+                   PUSH(rbp),
+                   MOV(rbp, rsp)
+               ] + alloc
 
     @gen.register
     def _(self, inst: FunctionEndInst):
@@ -112,16 +120,32 @@ class X86Generator(Generator):
 
     @gen.register
     def _(self, inst: ConvertInst):
-        return [
-            _TEXT(f'\t; {inst.dst.name} := {inst.src.type.name}_to_{inst.dst.type.name}({inst.src.name})\n')
-            # TODO: add float computing
-        ]
+        src = inst.src.type.name
+        dst = inst.dst.type.name
+        if src == dst:
+            raise Exception(f'Unexpected conversion instruction between same types')
+        conv = []
+        instructions = {}
+        signed = ['int', 'long']
+        if src in signed and dst in signed:
+            # between signed
+            if src == 'long':
+                conv = [MOV(rax, inst.src)]
+            else:
+                conv = [MOVSX(rax, inst.src)]
+        else:
+            if src not in instructions:
+                raise Exception(f'Unsupported source type {src}')
+            if dst not in instructions[src]:
+                raise Exception(f'Unsupported type {dst} converted from type {src}')
+            conv = instructions[src][dst]
+        return conv + [MOV(inst.dst, AX(inst.dst))]
 
     @gen.register
     def _(self, inst: AssignInst):
         return [
-            MOV(rax, inst.right),
-            MOV(inst.left, rax)
+            MOV(AX(inst.right), inst.right),
+            MOV(inst.left, AX(inst.left))
         ]
 
     @gen.register
@@ -129,7 +153,7 @@ class X86Generator(Generator):
         if inst.value is None:
             assign = []
         else:
-            assign = [MOV(rax, inst.value)]
+            assign = [MOV(AX(inst.value), inst.value)]
         return [
                    MOV(rsp, rbp),
                    POP(rbp),
@@ -144,12 +168,20 @@ class X86Generator(Generator):
             if arg is None:
                 break
             if reg is not None:
-                store_args.append(MOV(reg, arg))
+                if arg.type.byte == 8 or arg.type.name == 'string':
+                    store_args += [MOV(reg, arg)]
+                else:
+                    store_args += [MOVSX(reg, arg)]
             else:
-                store_args.append(PUSH(arg))
+                if arg.type.byte == 8 or arg.type.name == 'string':
+                    store_args += [PUSH(arg)]
+                else:
+                    store_args += [MOVSX(rax, arg), PUSH(rax)]
+        if inst.function.varargs:
+            store_args += [XOR(rax, rax)]
         assign = []
         if not isinstance(inst.place, VoidPlace):
-            assign = [MOV(inst.place, rax)]
+            assign = [MOV(inst.place, AX(inst.place))]
         recover_rsp = []
         pushed_count = max(0, len(inst.arguments) - 6)
         if pushed_count > 0:
@@ -160,25 +192,32 @@ class X86Generator(Generator):
     def _(self, inst: TwoOperandAssignInst):
         instructions = {
             '+': {
-                'long': [ADD(rax, inst.operand2)]
+                'signed': [ADD(AX(inst.operand2), inst.operand2)],
             },
             '-': {
-                'long': [SUB(rax, inst.operand2)]
+                'signed': [SUB(AX(inst.operand2), inst.operand2)],
             },
             '*': {
-                'long': [MOV(rbx, inst.operand2), IMUL(rbx)]
+                'signed': [MOV(BX(inst.operand2), inst.operand2), IMUL(BX(inst.operand2))],
             },
             '/': {
-                'long': [XOR(rdx, rdx), MOV(rbx, inst.operand2), IDIV(rbx)]
+                'signed': [
+                    XOR(DX(inst.operand2), DX(inst.operand2)),
+                    MOV(BX(inst.operand2), inst.operand2),
+                    IDIV(BX(inst.operand2))
+                ],
             }
         }
         op = inst.OP
         type_name = inst.target.type.name
+        if type_name in ['int', 'long']:
+            type_name = 'signed'
         if op not in instructions:
             raise Exception(f'Unsupported operator {op}')
         if type_name not in instructions[op]:
             raise Exception(f'Unsupported type {type_name} for operator {op}')
-        return [MOV(rax, inst.operand1)] + instructions[op][type_name] + [MOV(inst.target, rax)]
+        return [MOV(AX(inst.operand1), inst.operand1)] + instructions[op][type_name] + [
+            MOV(inst.target, AX(inst.target))]
 
     @gen.register
     def _(self, inst: IfGotoInst):
@@ -200,8 +239,8 @@ class X86Generator(Generator):
         if type_name not in instructions[op]:
             raise Exception(f'Unsupported type {type_name} for operator {op}')
         return [
-                   MOV(rax, inst.operand1),
-                   CMP(rax, inst.operand2),
+                   MOV(AX(inst.operand1), inst.operand1),
+                   CMP(AX(inst.operand2), inst.operand2),
                ] + instructions[op][type_name]
 
     @gen.register
@@ -226,13 +265,13 @@ class X86Generator(Generator):
 
     @gen.register
     def _(self, content: Local):
-        return f'qword [rbp{content.address:+d}]'
+        return f'{byte_to_type(content.type.byte)}word [rbp{content.address:+d}]'
 
     @gen.register
     def _(self, content: Place):
         if content.type.name == 'string':
             return content.name
-        return f'qword [{content.name}]'
+        return f'{byte_to_type(content.type.byte)}word [{content.name}]'
 
     @gen.register
     def _(self, content: Function):

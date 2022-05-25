@@ -81,10 +81,12 @@ class Semantic(CPExpListener):
         if src.type == dst_type:
             return src, []
         dst = self.new_temp(dst_type, src)
+        code = []
         if dst is None:
             dst = Constant(dst_type, src.value)
-        code = ConvertInst(src, dst)
-        return dst, [code]
+        else:
+            code += [ConvertInst(src, dst)]
+        return dst, code
 
     def convert_types(self, *places: Place, type_require: Type = None):
         dst_type = max(list(map(lambda x: x.type, places)))
