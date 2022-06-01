@@ -1,6 +1,7 @@
 import sys
 
 from antlr4 import *
+from loguru import logger
 
 from cpexp.antlr.build import update
 from cpexp.generic.lexer import get_tokens, CPELexer
@@ -43,21 +44,21 @@ class Compile:
 
     def compile(self, *optimizers, verbose=0):
         if verbose > 0:
-            print('Compiling...')
+            logger.debug('Compiling...')
         if verbose > 1:
-            print('    Parsing(with lexing on the fly)...')
+            logger.debug('    Parsing(with lexing on the fly)...')
         self.parse()
         if verbose > 1:
-            print('    Semantic analyzing...')
+            logger.debug('    Semantic analyzing...')
         self.semantic()
         if verbose > 1:
-            print('    General optimizing...')
+            logger.debug('    General optimizing...')
         self.optimize(*optimizers)
         if verbose > 1:
-            print('    Generating...')
+            logger.debug('    Generating...')
         self.generate()
         if verbose > 0:
-            print('Compile finished.')
+            logger.debug('Compile finished.')
         return self.result
 
     def lex_tokens(self):

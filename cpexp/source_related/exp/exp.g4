@@ -5,7 +5,7 @@ grammar exp;
 //TOKEN: IDN | INT16 | REAL16 | INT8 | REAL8 | INT10 | REAL10 | ADD | SUB | MUL | DIV | LT | GT | EQ | LB | RB | SEM | IF | THEN | ELSE | WHILE | DO;
 
 p           // Program
-  : l       # SingleProgram
+  : l EOF   # SingleProgram
   | l p     # AppendedProgram
   ;
 

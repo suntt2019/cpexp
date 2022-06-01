@@ -3,7 +3,7 @@ from cpexp.ir.memory import *
 from cpexp.generic.generator import TargetInstruction
 
 
-class X86(TargetInstruction):
+class AMD64(TargetInstruction):
 
     def gen(self, operands: list[str]) -> str:
         c = len(operands)
@@ -16,107 +16,107 @@ class X86(TargetInstruction):
         return f'\t{cmd}\n'
 
 
-class MOV(X86):
+class MOV(AMD64):
     NAME = 'mov'
     OP_CNT = 2
 
 
-class MOVSX(X86):
+class MOVSX(AMD64):
     NAME = 'movsx'
     OP_CNT = 2
 
 
-class ADD(X86):
+class ADD(AMD64):
     NAME = 'add'
     OP_CNT = 2
 
 
-class SUB(X86):
+class SUB(AMD64):
     NAME = 'sub'
     OP_CNT = 2
 
 
-class IMUL(X86):
+class IMUL(AMD64):
     NAME = 'imul'
     OP_CNT = 1
 
 
-class IDIV(X86):
+class IDIV(AMD64):
     NAME = 'idiv'
     OP_CNT = 1
 
 
-class XOR(X86):
+class XOR(AMD64):
     NAME = 'xor'
     OP_CNT = 2
 
 
-class PUSH(X86):
+class PUSH(AMD64):
     NAME = 'push'
     OP_CNT = 1
 
 
-class POP(X86):
+class POP(AMD64):
     NAME = 'pop'
     OP_CNT = 1
 
 
-class CALL(X86):
+class CALL(AMD64):
     NAME = 'call'
     OP_CNT = 1
 
 
-class RET(X86):
+class RET(AMD64):
     NAME = 'ret'
     OP_CNT = 0
 
 
-class JMP(X86):
+class JMP(AMD64):
     NAME = 'jmp'
     OP_CNT = 1
 
 
-class CMP(X86):
+class CMP(AMD64):
     NAME = 'cmp'
     OP_CNT = 2
 
 
-class JG(X86):
+class JG(AMD64):
     NAME = 'jg'
     OP_CNT = 1
 
 
-class JL(X86):
+class JL(AMD64):
     NAME = 'jl'
     OP_CNT = 1
 
 
-class JE(X86):
+class JE(AMD64):
     NAME = 'je'
     OP_CNT = 1
 
 
-class LAHF(X86):
+class LAHF(AMD64):
     NAME = 'lahf'
     OP_CNT = 0
 
 
-class SHR(X86):
+class SHR(AMD64):
     NAME = 'shr'
     OP_CNT = 2
 
 
-class AND(X86):
+class AND(AMD64):
     NAME = 'and'
     OP_CNT = 2
 
 
-class NOT(X86):
+class NOT(AMD64):
     NAME = 'not'
     OP_CNT = 1
 
 
-class _TEXT(X86):
+class _TEXT(AMD64):
     def __init__(self, text: str):
         self.text = text
         super().__init__()

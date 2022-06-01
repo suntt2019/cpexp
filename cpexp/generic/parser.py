@@ -4,6 +4,7 @@ import xml
 import yaml
 from antlr4 import ParserRuleContext, TokenStream
 from antlr4.tree.Tree import ParseTree, TerminalNodeImpl
+from loguru import logger
 
 from cpexp.antlr.CPExpParser import CPExpParser
 
@@ -15,7 +16,7 @@ class ASTViewer:
     def view(self):
         k, v = self.dict(self.root)
         ret = {k: v}
-        print(json.dumps({k: v}, indent=2))
+        logger.debug(json.dumps({k: v}, indent=2))
 
     def dict(self, node):
         if type(node) == TerminalNodeImpl:

@@ -1,7 +1,7 @@
 grammar c4e;
 
 program
-  : (declare_statement|function_declaration|asm_statement|function_definition)*
+  : (declare_statement|function_declaration|asm_statement|function_definition)* EOF
   ;
 
 function_declaration

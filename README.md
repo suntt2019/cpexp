@@ -6,7 +6,7 @@ CPExp: Compile Principle Experiment，即编译原理实验。
 
 本仓库存储《编译原理》实验涉及的代码，其功能如下：
 * 课程要求功能：将课程给出的代码编译为三地址码（Exp->TAC）
-* 扩展功能：将C语言简化版代码编译为x86汇编（C4e->X86）
+* 扩展功能：将C语言简化版代码编译为AMD64汇编（C4e->AMD64）
   * 调试用中间功能：C4e->TACP
 
 ### 项目结构
@@ -53,7 +53,7 @@ CPExp: Compile Principle Experiment，即编译原理实验。
 * 当前有构建且是所需语言时，系统正常运行
 
 以下为根目录下`build.py`脚本使用方法：
-```
+```text
 usage: build.py [-h] [--language LANGUAGE] [--verbose] [--force]
 
 options:
@@ -63,3 +63,24 @@ options:
   --force, -f
 ```
 脚本语言默认为`exp`，可以先不指定语言运行（构建`exp`），随后让系统自动重新构建到正确的源语言。
+
+### 系统运行方式
+
+以下为根目录下`main.py`脚本使用方法：
+```text
+usage: main.py [-h] [--STDIN] [-s {c4e,exp}] [-t {tac,tacp,amd64asm,amd64elf}]
+  [-o OUTPUT] [--tokens] [-r] [-v] [input]
+
+positional arguments:
+  input                 Path to the input file
+
+options:
+  -h, --help                        show this help message and exit
+  --STDIN                           get input from STDIN instead of file
+  -s {c4e,exp}, --source {c4e,exp}  source language
+  -t {tac,tacp,amd64asm,amd64elf}   target language
+  -o OUTPUT, --output OUTPUT        path to the output file
+  --tokens                          only lex and print tokens instead of compile
+  -r, --run                         run after compile
+  -v, --verbose                     verbosity
+```

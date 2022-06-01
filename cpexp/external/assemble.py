@@ -1,5 +1,7 @@
 import os.path
 
+from loguru import logger
+
 from cpexp.base import working_dir
 from cpexp.external.external import execute
 import tempfile
@@ -10,11 +12,9 @@ ld_path = 'ld'
 
 
 def assemble(code: str, clean=True, verbose=0, output_path=os.path.join(working_dir, '..', 'a.out'),
-             directory: str = None):
+             directory: str = tempfile.mkdtemp()):
     if verbose > 0:
-        print('Assembling...')
-    if directory is None:
-        directory = tempfile.mkdtemp()
+        logger.debug('Assembling...')
     asm_file = os.path.join(directory, 'temp.s')
     obj_file = os.path.join(directory, 'temp.o')
     if os.path.exists(asm_file):
@@ -32,11 +32,11 @@ def assemble(code: str, clean=True, verbose=0, output_path=os.path.join(working_
         raise Exception(f'Assemble Failed: \n{out}')
 
     # out, exit_code = execute([ld_path, obj_file, '-o', output_path], verbose=verbose)
-    out, exit_code = execute([ld_path, '-dynamic-linker', '/lib64/ld-linux-x86-64.so.2', '-lc', obj_file, '-o', output_path], verbose=verbose)
+    out, exit_code = execute([ld_path, '-dynamic-linker', '/lib64/ld-linux-amd64-64.so.2', '-lc', obj_file, '-o', output_path], verbose=verbose)
     if exit_code != 0:
         raise Exception(f'Assemble Failed: \n{out}')
 
     if clean:
         shutil.rmtree(directory)
     if verbose > 0:
-        print('Assembling finished.')
+        logger.debug('Assembling finished.')

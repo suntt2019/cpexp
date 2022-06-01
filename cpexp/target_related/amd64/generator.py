@@ -4,9 +4,9 @@ from itertools import zip_longest
 from cpexp.base import working_dir
 from cpexp.generic.generator import *
 from cpexp.source_related.c4e.memory import C4eType
-from cpexp.target_related.x86.instruction import *
-from cpexp.target_related.x86.instruction import _TEXT
-from cpexp.target_related.x86.register import *
+from cpexp.target_related.amd64.instruction import *
+from cpexp.target_related.amd64.instruction import _TEXT
+from cpexp.target_related.amd64.register import *
 
 template = None
 
@@ -19,7 +19,7 @@ def get_template():
     global template
     if template is not None:
         return template
-    with open(os.path.join(working_dir, 'target_related', 'x86', 'template.s')) as f:
+    with open(os.path.join(working_dir, 'target_related', 'amd64', 'template.s')) as f:
         content = f.read()
     prefix, _, leftover = content.partition('; PREFIX_END')
     _, _, suffix = leftover.partition('; SUFFIX_BEGIN')
@@ -53,7 +53,7 @@ def type_to_specifier(_type: str):
 
 
 # Generate intel syntax for nasm
-class X86Generator(Generator):
+class AMD64Generator(Generator):
     def generate(self, ir: list[Instruction]) -> str:
         prefix, suffix = get_template()
         generated = sum(map(self.gen, ir), [])
@@ -115,7 +115,7 @@ class X86Generator(Generator):
                         MOV(param, AX(param))
                     ]
         if allocated_byte > 0:
-            # TODO: Add X86Type which is almost same with C4eType, then add conversion between them
+            # TODO: Add AMD64 type which is almost same with C4eType, then add conversion between them
             alloc = [SUB(rsp, Constant(C4eType('long'), allocated_byte))] + alloc
         return [
                    _TEXT(f'\n{inst.function.name}:\n'),

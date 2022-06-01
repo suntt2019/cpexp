@@ -2,11 +2,11 @@ from cpexp.generic.generator import Register
 from cpexp.ir.memory import Place
 
 
-class X86Reg(Register):
+class AMD64Reg(Register):
     pass
 
 
-class GeneralRegister(X86Reg):
+class GeneralRegister(AMD64Reg):
     NAME = '?_?'
 
     def __init__(self, size: int | Place | None = None):
@@ -24,7 +24,7 @@ class GeneralRegister(X86Reg):
         super().__init__(size)
 
 
-class WordRegister(X86Reg):
+class WordRegister(AMD64Reg):
     NAME = '?__'
 
     def __init__(self, size: int | Place | None = None):
@@ -42,7 +42,7 @@ class WordRegister(X86Reg):
         super().__init__(size)
 
 
-class AdditionalRegister(X86Reg):
+class AdditionalRegister(AMD64Reg):
     NAME = 'r?'
 
     def __init__(self, size: int | Place | None = None):
