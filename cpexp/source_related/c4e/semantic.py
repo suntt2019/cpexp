@@ -41,7 +41,8 @@ class C4eSemantic(Semantic):
         parameters = []
         for param_type, param_id in zip_longest(*([iter(param_list)] * 2)):
             parameters.append((C4eType(param_type), param_id))
-        fp['func'] = self.new_function(Function(_id, _type, parameters, varargs))
+        with self.at('_id'):
+            fp['func'] = self.new_function(Function(_id, _type, parameters, varargs))
 
     @parameterize_children
     def enterFunctionBody(self, fb: VA, b: VA):
@@ -70,7 +71,8 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitAssignStatement(self, s: VA, _id, e: VA):
-        target = self.get_variable(_id)
+        with self.at('_id'):
+            target = self.get_variable(_id)
         _e, code = self.convert_type(target.type, e.place)
         s.code = e.code + code + [AssignInst(target, _e)]
 
@@ -89,10 +91,12 @@ class C4eSemantic(Semantic):
         else:
             initial = e.place
         if self.context.function is None:
-            place = self.new_global(_id, C4eType(_type), initial)
+            with self.at('_id'):
+                place = self.new_global(_id, C4eType(_type), initial)
             s.code = []
             if e is not None and len(e.code) > 0:
-                raise Exception('Global variable initializer should be const')
+                with self.at('_id'):  # TODO: we should at 'e' in fact, but the feature isn't supported for now
+                    raise MessageException('Global variable initializer should be const')
         else:
             place = self.new_local(_id, C4eType(_type), initial)
             s.code = []
@@ -279,13 +283,15 @@ class C4eSemantic(Semantic):
         arg_code = reduce(lambda a, b: a + b.code, e, [])
         arg_places = list(map(lambda x: x.place, e))
         arg_types = list(map(lambda x: x.type, arg_places))
-        func = self.get_function(_id, arg_types)
+        with self.at('_id'):
+            func = self.get_function(_id, arg_types)
         param_types = list(map(lambda x: x.type, func.param_list))
-        if func.varargs:
-            _arg_places, arg_conv_code = self.convert_type_list(arg_places[:len(param_types)], param_types)
-            _arg_places += arg_places[len(param_types):]
-        else:
-            _arg_places, arg_conv_code = self.convert_type_list(arg_places, param_types)
+        with self.at('_id'):  # TODO: should be at 'e' in fact
+            if func.varargs:
+                _arg_places, arg_conv_code = self.convert_type_list(arg_places[:len(param_types)], param_types)
+                _arg_places += arg_places[len(param_types):]
+            else:
+                _arg_places, arg_conv_code = self.convert_type_list(arg_places, param_types)
         if func.return_type is not None:
             s.place = self.new_temp(func.return_type)
         else:
@@ -338,7 +344,8 @@ class C4eSemantic(Semantic):
 
     @parameterize_children
     def exitIdentifierFactor(self, f: VA, _id: str):
-        f.place = self.get_variable(_id)
+        with self.at('_id'):
+            f.place = self.get_variable(_id)
         f.code = []
 
     @parameterize_children
@@ -379,7 +386,9 @@ class C4eSemantic(Semantic):
             _id = base64.b64encode(string.encode("ascii")).decode("ascii").replace('=', '')
         _id = f'str_{_id}'
         _type = C4eType('string')
-        f.place = self.new_global(_id, _type, Constant(_type, string))
+        # TODO: a bug here, same string constant can't be used twice
+        with self.at('string'):
+            f.place = self.new_global(_id, _type, Constant(_type, string))
         f.code = []
 
     @parameterize_children

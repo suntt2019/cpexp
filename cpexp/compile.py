@@ -4,6 +4,7 @@ from antlr4 import *
 from loguru import logger
 
 from cpexp.antlr.build import update
+from cpexp.generic.error import try_compile
 from cpexp.generic.lexer import get_tokens, CPELexer
 from cpexp.generic.parser import CPEParser
 from cpexp.generic.generator import Generator
@@ -33,6 +34,7 @@ class Compile:
                  semantic=Semantic,
                  generator=Generator):
         self.input_s = input_stream
+        self.source = self.input_s.getText(0, self.input_s.size).split('\n')
         self.lexer = lexer(self.input_s)
         self.token_s = CommonTokenStream(self.lexer)
         self.parser = parser(self.token_s)
@@ -62,23 +64,29 @@ class Compile:
         return self.result
 
     def lex_tokens(self):
-        self.lex_only()
+        self.lex()
         return self.get_tokens()
 
-    def lex_only(self):
+    @try_compile
+    def lex(self):
         self.token_s.fetch(sys.maxsize)
 
+    @try_compile
     def parse(self):
+        self.parser.source = self.source
         self.ast = self.parser.parse()
-        # TODO: check if error occur during parsing and raise error
 
+    @try_compile
     def semantic(self):
+        self.semantic_analyzer.source = self.source
         self.ir = self.semantic_analyzer.analyze(self.ast)
 
+    @try_compile
     def optimize(self, *optimizers):
         for func in optimizers:
             self.ir = func(self.ir)
 
+    @try_compile
     def generate(self):
         self.result = self.generator.generate(self.ir)
 
@@ -119,9 +127,9 @@ class CompileWithLanguage(Compile):
                          semantic=semantic,
                          generator=generator)
 
-    def lex_only(self):
+    def lex(self):
         update(self.source_name)
-        super().lex_only()
+        super().lex()
 
     def parse(self):
         update(self.source_name)

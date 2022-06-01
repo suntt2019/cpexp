@@ -17,7 +17,7 @@ class TestLexer(unittest.TestCase):
             name, _, extension = filename.rpartition('.')
             with self.subTest(name=name):
                 c = Compile(FileStream(os.path.join(directory, 'input', filename)))
-                c.lex_only()
+                c.lex()
                 with open(os.path.join(directory, 'output', f'{name}.ans')) as f:
                     expected = f.read()
                 actual = '\n'.join(c.get_tokens())

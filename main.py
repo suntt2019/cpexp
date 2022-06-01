@@ -50,11 +50,11 @@ input_stream = None
 if args.STDIN:
     input_stream = StdinStream()
 elif args.input is None:
-    logger.error('No input file or stream.')
+    logger.critical('No input file or stream.')
     exit(1)
 else:
     if not os.path.isfile(args.input):
-        logger.error(f"{args.input}: Isn't a file.")
+        logger.critical(f"{args.input}: Isn't a file.")
         exit(1)
     name, sep, extension = args.input.rpartition('.')
     if args.source is None and sep == '.':

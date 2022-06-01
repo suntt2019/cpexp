@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from cpexp.generic.error import MessageException
 from cpexp.ir.base import InstructionContent
 
 
@@ -38,7 +39,7 @@ class VoidPlace(Place):
     @property
     def type(self):
         # TODO: This assumes any access to the places need to get its type first
-        raise Exception("Void value not ignored as it should be")
+        raise MessageException("Void value not ignored as it should be")
 
 
 class Constant(Place):

@@ -1,3 +1,4 @@
+from cpexp.generic.error import MessageException
 from cpexp.ir.label import *
 from cpexp.ir.memory import *
 from cpexp.generic.generator import TargetInstruction
@@ -8,7 +9,7 @@ class AMD64(TargetInstruction):
     def gen(self, operands: list[str]) -> str:
         c = len(operands)
         if c != self.OP_CNT:  # TODO: this line is written for development, remove this to improve performance
-            raise Exception(f'{c} operands ({operands}) are not supported for instruction {self.NAME}')
+            raise MessageException(f'{c} operands ({operands}) are not supported for instruction {self.NAME}')
         if c == 0:
             cmd = self.NAME
         else:

@@ -1,3 +1,4 @@
+from cpexp.generic.error import MessageException
 from cpexp.generic.generator import Register
 from cpexp.ir.memory import Place
 
@@ -13,7 +14,7 @@ class GeneralRegister(AMD64Reg):
         if isinstance(size, Place):
             size = size.type.byte
         if size not in [1, 2, 4, 8]:
-            raise Exception(f'Invalid size "{size}"')
+            raise MessageException(f'Invalid size "{size}"')
         formats = {
             1: '{}l',
             2: '{}x',
@@ -31,7 +32,7 @@ class WordRegister(AMD64Reg):
         if isinstance(size, Place):
             size = size.type.byte
         if size not in [1, 2, 4, 8]:
-            raise Exception(f'Invalid size "{size}"')
+            raise MessageException(f'Invalid size "{size}"')
         formats = {
             1: '{}l',
             2: '{}',
@@ -49,7 +50,7 @@ class AdditionalRegister(AMD64Reg):
         if isinstance(size, Place):
             size = size.type.byte
         if size not in [1, 2, 4, 8]:
-            raise Exception(f'Invalid size "{size}"')
+            raise MessageException(f'Invalid size "{size}"')
         formats = {
             1: 'r{}b',
             2: 'r{}w',

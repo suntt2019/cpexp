@@ -29,9 +29,9 @@ def get_template():
 
 def byte_to_type(byte: int):
     if byte > 8:
-        raise Exception(f'Unsupported word length {byte}')
+        raise MessageException(f'Unsupported word length {byte}')
     elif byte <= 0:
-        raise Exception(f'Invalid non-positive bits {byte}')
+        raise MessageException(f'Invalid non-positive bits {byte}')
     elif byte <= 1:
         data_type = 'b'
     elif byte <= 2:
@@ -61,7 +61,7 @@ class AMD64Generator(Generator):
 
     @meth_dispatch
     def gen(self, x) -> list:
-        raise Exception(f'Unable to generate from type {x.__class__.__name__} object {x}')
+        raise MessageException(f'Unable to generate from type {x.__class__.__name__} object {x}')
 
     @gen.register
     def _(self, inst: SymbolInst):
@@ -132,7 +132,7 @@ class AMD64Generator(Generator):
         src = inst.src.type.name
         dst = inst.dst.type.name
         if src == dst:
-            raise Exception(f'Unexpected conversion instruction between same types')
+            raise MessageException(f'Unexpected conversion instruction between same types')
         conv = []
         instructions = {}
         signed = ['char', 'short', 'int', 'long']
@@ -153,9 +153,9 @@ class AMD64Generator(Generator):
             ]
         else:
             if src not in instructions:
-                raise Exception(f'Unsupported source type {src}')
+                raise MessageException(f'Unsupported source type {src}')
             if dst not in instructions[src]:
-                raise Exception(f'Unsupported type {dst} converted from type {src}')
+                raise MessageException(f'Unsupported type {dst} converted from type {src}')
             conv = instructions[src][dst]
         return conv + [MOV(inst.dst, AX(inst.dst))]
 
@@ -231,9 +231,9 @@ class AMD64Generator(Generator):
         if type_name in ['char', 'short', 'int', 'long']:
             type_name = 'signed'
         if op not in instructions:
-            raise Exception(f'Unsupported operator {op}')
+            raise MessageException(f'Unsupported operator {op}')
         if type_name not in instructions[op]:
-            raise Exception(f'Unsupported type {type_name} for operator {op}')
+            raise MessageException(f'Unsupported type {type_name} for operator {op}')
         return [MOV(AX(inst.operand1), inst.operand1)] + instructions[op][type_name] + [
             MOV(inst.target, AX(inst.target))]
 
@@ -256,9 +256,9 @@ class AMD64Generator(Generator):
         if type_name in ['char', 'short', 'int', 'long']:
             type_name = 'signed'
         if op not in instructions:
-            raise Exception(f'Unsupported operator {op}')
+            raise MessageException(f'Unsupported operator {op}')
         if type_name not in instructions[op]:
-            raise Exception(f'Unsupported type {type_name} for operator {op}')
+            raise MessageException(f'Unsupported type {type_name} for operator {op}')
         return [
                    MOV(AX(inst.operand1), inst.operand1),
                    CMP(AX(inst.operand2), inst.operand2),

@@ -8,7 +8,7 @@ class TACPGenerator(Generator):
 
     @meth_dispatch
     def gen(self, inst):
-        raise Exception(f'Unable to generate from type {inst.__class__.__name__}')
+        raise MessageException(f'Unable to generate from type {inst.__class__.__name__}')
 
     @gen.register
     def _(self, inst: DataInst):

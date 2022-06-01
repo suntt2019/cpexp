@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import inspect
+
+from antlr4 import ParserRuleContext
 from antlr4.tree.Tree import TerminalNodeImpl, ParseTreeWalker
 
 from cpexp.antlr.CPExpListener import CPExpListener
 from cpexp.generic.context import Context
+from cpexp.generic.error import MessageException, PositionException
 from cpexp.ir.function import Function
 from cpexp.ir.instruction import *
 from cpexp.ir.label import *
@@ -15,11 +19,14 @@ class Semantic(CPExpListener):
     def __init__(self, token_value: list):
         self.token_value = token_value
         self.variable_attributes = {}
-        self.labels = []            # type: list[Label]
-        self.temp = []              # type: list[Place]
-        self.global_ = {}           # type: dict[str, Place]
-        self.functions = {}         # type: dict[str, Function]
-        self.context = Context()    # type: Context
+        self.labels = []  # type: list[Label]
+        self.temp = []  # type: list[Place]
+        self.global_ = {}  # type: dict[str, Place]
+        self.functions = {}  # type: dict[str, Function]
+        self.context = Context()  # type: Context
+        self.current_children = {}  # type: dict[any, TerminalNodeImpl | ParserRuleContext]
+        self.position = None  # type: list[int] | None
+        self.source = ''  # type: str
 
     def get_data(self, x):
         if type(x) == TerminalNodeImpl:
@@ -40,9 +47,10 @@ class Semantic(CPExpListener):
         self.temp.append(ret)
         return ret
 
+    # Need at
     def new_global(self, name: str, _type: Type, initial=None):
         if name in self.global_:
-            raise Exception(f'Global variable "{name}" already exists.')
+            raise MessageException(f'Global variable "{name}" already exists.')
         ret = Place(name, _type, initial)
         self.global_[name] = ret
         return ret
@@ -51,6 +59,7 @@ class Semantic(CPExpListener):
         address = -self.context.function.use_memory(_type.byte)
         return self.context.add_local(Local(name, _type, address, initial))
 
+    # Need at
     def get_variable(self, name: str):
         local = self.context[name]
         if local is not None:
@@ -58,23 +67,25 @@ class Semantic(CPExpListener):
         if name in self.global_:
             return self.global_[name]
         if name in self.functions:
-            raise Exception(f'Function {name} is not a variable.')
-        raise Exception(f'Undeclared variable {name}.')
+            raise MessageException(f'Function {name} is not a variable.')
+        raise MessageException(f'Undeclared variable "{name}".')
 
     # TODO: refactor 'new_xxx' into a symbol table (symbol manager)
     # Structure: (memory, label, function) -> (symbol table, context)
     # For context free symbols, in the symbol table
     # For context related symbols, in the context
+    # Need at
     def new_function(self, function: Function):
         if function.name in self.functions:
-            raise Exception(f'Function "{function.name}" already exists.')
+            raise MessageException(f'Function "{function.name}" already exists.')
         self.functions[function.name] = function
         return function
 
+    # Need at
     def get_function(self, name: str, param_types: list[Type] = None):
         # TODO: add function overload
         if name not in self.functions:
-            raise Exception(f'Undeclared function "{name}".')
+            raise MessageException(f'Undeclared function "{name}".')
         return self.functions[name]
 
     def convert_type(self, dst_type: Type, src: Place) -> tuple[Place, list[ConvertInst]]:
@@ -107,7 +118,7 @@ class Semantic(CPExpListener):
         _places = []
         code = []
         if len(places) != len(types):
-            raise Exception(f"Count of places({len(places)}) and types({len(types)}) doesn't match")
+            raise MessageException(f"Count of places({len(places)}) and types({len(types)}) doesn't match")
         for arg_place, _type in zip(places, types):
             _place, c = self.convert_type(_type, arg_place)
             _places.append(_place)
@@ -120,25 +131,36 @@ class Semantic(CPExpListener):
     def exit(self):
         self.context = self.context.exit()
 
+    def at(self, name: str):
+        return PositionStorer(self, name)
+
     def analyze(self, ast):
-        walker = ParseTreeWalker()
-        walker.walk(self, ast)
-        symbol = []
-        for f in self.functions.values():
-            if not f.implemented:
-                symbol.append(SymbolInst(f.name, 'extern'))
-        data_section = [SectionStartInst('data')]
-        bss_section = [SectionStartInst('bss')]
-        for var in self.temp + list(self.global_.values()):
-            if var.initial is None:
-                bss_section.append(BSSInst(var))
-            else:
-                # TODO: try to calculate initial expression during compile
-                if isinstance(var.initial, Constant):
-                    data_section.append(DataInst(var))
-                else:
+        try:
+            walker = ParseTreeWalker()
+            walker.walk(self, ast)
+            symbol = []
+            for f in self.functions.values():
+                if not f.implemented:
+                    symbol.append(SymbolInst(f.name, 'extern'))
+            data_section = [SectionStartInst('data')]
+            bss_section = [SectionStartInst('bss')]
+            for var in self.temp + list(self.global_.values()):
+                if var.initial is None:
                     bss_section.append(BSSInst(var))
-        return symbol + data_section + bss_section + [SectionStartInst('text')] + self.variable_attributes[ast].code
+                else:
+                    # TODO: try to calculate initial expression during compile
+                    if isinstance(var.initial, Constant):
+                        data_section.append(DataInst(var))
+                    else:
+                        bss_section.append(BSSInst(var))
+            return symbol + data_section + bss_section + [SectionStartInst('text')] + self.variable_attributes[ast].code
+        except MessageException as e:
+            if self.position is not None:
+                line, column = self.position
+                content = self.source[line - 1]
+                raise PositionException(e.message, line, column, content)
+            else:
+                raise e
 
 
 class VA:
@@ -164,18 +186,46 @@ class VA:
         self.other[key] = value
 
 
+# TODO: refactor the major part to a member function of semantic
 def parameterize_children(func):
-    def wrapper(self, ctx):
-        args = list(filter(
-            lambda x: x != '_',
-            map(
-                lambda x: self.get_data(x),
-                [ctx] + list(ctx.getChildren())
-            )
-        ))
+    def wrapper(self: Semantic, ctx):
+        self.current_children = {}
+        spec = inspect.getfullargspec(func)
+        names = spec.args[1:]
+        vararg = spec.varargs
+        args = []
+        children = [ctx] + list(ctx.getChildren())
+        for x in children:
+            data = self.get_data(x)
+            if data == '_':
+                continue
+            if len(names) > 0:
+                name = names[0]
+                names.pop(0)
+            elif vararg is not None:
+                name = vararg
+            else:
+                raise MessageException(f'Too much children for rule{func.__name__}')
+            self.current_children[name] = x
+            args.append(data)
+        if spec.defaults is not None and len(names) > len(spec.defaults):
+            raise MessageException(f'Too few children for rule{func.__name__}')
         func(
             self,
             *args
         )
 
     return wrapper
+
+
+class PositionStorer:
+    def __init__(self, semantic: Semantic, name: str):
+        self.semantic = semantic
+        token = semantic.current_children[name].symbol
+        semantic.position = [token.line, token.column]
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass

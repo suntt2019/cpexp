@@ -14,6 +14,8 @@ def get_tokens(s: CommonTokenStream) -> list[CommonToken]:
 class CPELexer(CPExpLexer):
     def __init__(self, input=None, output: TextIO = sys.stdout):
         super().__init__(input, output)
+        # self.removeErrorListeners()
+        # self.addErrorListener()
         self.token_values = []
 
     def nextToken(self):

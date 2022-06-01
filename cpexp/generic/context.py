@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 
+from cpexp.generic.error import MessageException
 from cpexp.ir.function import Function
 from cpexp.ir.memory import Type, Local
 
@@ -34,7 +35,7 @@ class Context:
 
     def add_local(self, local: Local):
         if local.name in self.locals:
-            raise Exception(f'Local variable {local.name} already exists.')
+            raise MessageException(f'Local variable {local.name} already exists.')
         self.locals[local.name] = local
         return local
 

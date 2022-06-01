@@ -7,6 +7,7 @@ from antlr4.tree.Tree import ParseTree, TerminalNodeImpl
 from loguru import logger
 
 from cpexp.antlr.CPExpParser import CPExpParser
+from cpexp.generic.error import CPEErrorListener, MultipleException, MessageException
 
 
 class ASTViewer:
@@ -24,7 +25,7 @@ class ASTViewer:
         elif issubclass(type(node), ParserRuleContext):
             return self.variable(node)
         else:
-            raise Exception(f'Unknown node type {type(node)}')
+            raise MessageException(f'Unknown node type {type(node)}')
 
     def variable(self, var: ParserRuleContext):
         name = var.__class__.__name__[:-len('Context')]
@@ -42,8 +43,22 @@ class ASTViewer:
 class CPEParser(CPExpParser):
     START = 's'
 
+    def __init__(self, input_s):
+        super().__init__(input_s)
+        self.source = None
+        self.error_listener = CPEErrorListener()
+        self.removeErrorListeners()
+        self.addErrorListener(self.error_listener)
+
     def parse(self):
-        return getattr(self, self.START)()
+        ret = getattr(self, self.START)()
+        errors = self.error_listener.errors
+        if len(errors) == 0:
+            return ret
+        elif len(errors) == 1:
+            raise errors[0]
+        else:
+            raise MultipleException(errors)
 
 
 def custom_start_parser(start: str):

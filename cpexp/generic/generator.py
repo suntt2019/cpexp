@@ -1,6 +1,7 @@
 from __future__ import annotations
 from functools import singledispatch, update_wrapper
 
+from cpexp.generic.error import MessageException
 from cpexp.ir.instruction import *
 
 
@@ -39,7 +40,7 @@ class TargetInstruction:
         self.operands = operands
 
     def gen(self, operands: list[str]) -> str:
-        raise Exception(f'Type {self.__class__} target instruction {self} without gen() function')
+        raise MessageException(f'Type {self.__class__} target instruction {self} without gen() function')
 
 
 class Generator:
@@ -48,15 +49,15 @@ class Generator:
 
     @meth_dispatch
     def gen(self, x: Instruction | InstructionContent):
-        raise Exception(f'Unable to generate from non-instruction type {x.__class__.__name__}')
+        raise MessageException(f'Unable to generate from non-instruction type {x.__class__.__name__}')
 
     @gen.register
     def _(self, inst: Instruction) -> list[TargetInstruction]:
-        raise Exception(f'Unable to generate from type {inst.__class__.__name__} instruction {inst}')
+        raise MessageException(f'Unable to generate from type {inst.__class__.__name__} instruction {inst}')
 
     @gen.register
     def _(self, content: InstructionContent) -> list[str]:
-        raise Exception(f'Unable to generate from type {content.__class__.__name__} instruction content {content}')
+        raise MessageException(f'Unable to generate from type {content.__class__.__name__} instruction content {content}')
 
     def tr_to_str(self, tr: list[TargetInstruction]):
         ret = ''
@@ -68,6 +69,6 @@ class Generator:
                 elif isinstance(o, InstructionContent):
                     operands.append(self.gen(o))
                 else:
-                    raise Exception(f'Unexpected operand {o} which is neither a register nor a instruction content')
+                    raise MessageException(f'Unexpected operand {o} which is neither a register nor a instruction content')
             ret += r.gen(operands)
         return ret
