@@ -15,25 +15,33 @@ class TACGenerator(Generator):
         return ''
 
     @gen.register
+    def _(self, inst: BSSInst):
+        return ''
+
+    @gen.register
+    def _(self, inst: SectionStartInst):
+        return ''
+
+    @gen.register
     def _(self, inst: ConvertInst):
-        return f'\t{inst.dst} := {inst.src}\n'
+        return f'\t{inst.dst.name} := {inst.src.name}\n'
 
     @gen.register
     def _(self, inst: AssignInst):
-        return f'\t{inst.left} := {inst.right}\n'
+        return f'\t{inst.left.name} := {inst.right.name}\n'
 
     @gen.register
     def _(self, inst: TwoOperandAssignInst):
-        return f'\t{inst.target} := {inst.operand1} {inst.OP} {inst.operand2}\n'
+        return f'\t{inst.target.name} := {inst.operand1.name} {inst.OP} {inst.operand2.name}\n'
 
     @gen.register
     def _(self, inst: IfGotoInst):
-        return f'\tif {inst.operand1} {inst.op} {inst.operand2} goto {inst.label}\n'
+        return f'\tif {inst.operand1.name} {inst.op} {inst.operand2.name} goto {inst.label.name}\n'
 
     @gen.register
     def _(self, inst: GotoInst):
-        return f'\tgoto {inst.label}\n'
+        return f'\tgoto {inst.label.name}\n'
 
     @gen.register
     def _(self, inst: LabelInst):
-        return f'{inst.label}:'
+        return f'{inst.label.name}:'

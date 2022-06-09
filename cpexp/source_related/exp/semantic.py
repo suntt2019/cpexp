@@ -1,4 +1,4 @@
-from cpexp.ir.memory import Type
+from cpexp.ir.memory import Type, Place, Constant
 from cpexp.ir.instruction import AssignInst, LabelInst, GotoInst, IfGotoInst, AddInst, SubInst, MultipleInst, \
     DivisionInst
 from cpexp.generic.semantic import Semantic, parameterize_children, VA
@@ -7,7 +7,7 @@ from cpexp.generic.semantic import Semantic, parameterize_children, VA
 class ExpSemantic(Semantic):
 
     def new_temp(self):
-        return self.new_temp(Type('_'))
+        return super().new_temp(Type('_'))
 
     @parameterize_children
     def exitSingleProgram(self, p: VA, l: VA):
@@ -23,7 +23,7 @@ class ExpSemantic(Semantic):
 
     @parameterize_children
     def exitAssignStatement(self, s: VA, _id, e: VA):
-        s.code = e.code + [AssignInst(_id, e.place)]
+        s.code = e.code + [AssignInst(Place(_id, Type('_')), e.place)]
 
     @parameterize_children
     def enterIfStatement(self, s: VA, c: VA, s1: VA):
@@ -131,20 +131,20 @@ class ExpSemantic(Semantic):
 
     @parameterize_children
     def exitIdentifierFactor(self, f: VA, _id):
-        f.place = _id
+        f.place = Place(_id, Type('_'))
         f.code = []
 
     @parameterize_children
     def exitInt8Factor(self, f: VA, int8):
-        f.place = int8
+        f.place = Place(int8, Type('_'))
         f.code = []
 
     @parameterize_children
     def exitInt10Factor(self, f: VA, int10):
-        f.place = int10
+        f.place = Place(int10, Type('_'))
         f.code = []
 
     @parameterize_children
     def exitInt16Factor(self, f: VA, int16):
-        f.place = int16
+        f.place = Place(int16, Type('_'))
         f.code = []

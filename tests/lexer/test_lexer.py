@@ -12,7 +12,7 @@ import unittest
 
 class TestLexer(unittest.TestCase):
     def test_overall(self):
-        update()
+        update('exp')
         for filename in os.listdir(os.path.join(directory, 'input')):
             name, _, extension = filename.rpartition('.')
             with self.subTest(name=name):
