@@ -7,7 +7,7 @@ from loguru import logger
 
 from cpexp.base import *
 
-antlr_alias = 'java -Xmx500M -cp "/usr/local/lib/antlr-4.9-complete.jar:$CLASSPATH" org.antlr.v4.Tool'
+antlr_alias = f'java -Xmx500M -cp "{os.path.join(working_dir, "antlr-4.9-complete.jar")}" org.antlr.v4.Tool'
 
 
 def build(language: str, verbose=0):
