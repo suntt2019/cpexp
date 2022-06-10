@@ -1,8 +1,5 @@
 global    _start
 
-    section .data
-    start_message:  db        "Start:", 10
-
 ; PREFIX_END
     section .text
 main:
@@ -12,11 +9,6 @@ main:
 
     section .text
 _start:
-    mov     rax, 1
-    mov     rdi, 1
-    mov     rsi, start_message
-    mov     rdx, 7
-    syscall
 
     call    main
 

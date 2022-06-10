@@ -1,0 +1,6 @@
+altgraph==0.17.2
+antlr4-python3-runtime==4.9
+case-convert==1.1.0
+certifi==2020.6.20
+loguru==0.6.0
+PyYAML==6.0
